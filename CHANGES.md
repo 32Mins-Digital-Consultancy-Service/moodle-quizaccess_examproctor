@@ -1,5 +1,18 @@
 # Changes
 
+## 1.1.1 (2026-11-10)
+
+- Fix (critical, 1.1.0 only): the browser script stopped at start-up ("Cannot read properties of undefined
+  (reading 'strings')"), so no camera, fullscreen, copy/paste blocking or events ran and every attempt showed
+  "No proctoring data". The script now runs; verified in a simulated browser end to end (camera refusal screen,
+  screen-share and fullscreen screens, tab-away time, clipboard, auto-submit with the page saved first).
+
+## 1.1.0 (2026-11-10)
+
+- Fix: the attempt page passed over 1 KB of settings through js_call_amd(), which shows a Moodle debugging warning
+  to students when developer debugging is on. Settings are now passed as page data.
+- Version aligned with Exam Proctor Pro 1.1.0 (which requires this version). No database change.
+
 ## 1.0.0-rc1 (2026-11-07)
 
 Audit fixes and the free-core split.

@@ -752,15 +752,18 @@ define(['core/ajax'], function(Ajax) {
         /**
          * Entry point called from PHP.
          *
-         * @param {Object} config settings passed from rule.php
+         * @param {Object} [config] settings; by default read from the page data written by rule.php
          */
         init: function(config) {
             if (started) {
                 return;
             }
+            cfg = config || window.quizaccess_examproctor_config;
+            if (!cfg) {
+                return;
+            }
             started = true;
-            cfg = config;
-            strings = config.strings || {};
+            strings = cfg.strings || {};
 
             buildOverlay();
             buildBadge();

@@ -328,7 +328,9 @@ class quizaccess_examproctor extends access_rule_base {
             'strings' => $strings,
         ];
 
-        $page->requires->js_call_amd('quizaccess_examproctor/proctor', 'init', [$config]);
+        // The configuration is larger than js_call_amd() accepts without a debugging warning: pass it as page data.
+        $page->requires->data_for_js('quizaccess_examproctor_config', $config);
+        $page->requires->js_call_amd('quizaccess_examproctor/proctor', 'init', []);
     }
 
     // -------------------------------------------------------------------
