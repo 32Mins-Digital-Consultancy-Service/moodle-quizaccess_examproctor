@@ -1,5 +1,12 @@
 # Changes
 
+## 1.2.1 (2026-11-11)
+
+- Fix: when the browser refused fullscreen (browser policy, kiosk mode, quiz opened in a frame, or the request not
+  counted as a click), the "must be taken in fullscreen" screen stayed and blocked every click. Now, if fullscreen
+  fails or does not start within 3 s, the quiz continues, the student sees a notice, and "Fullscreen not available"
+  is flagged in the report (not counted as a violation). Verified in a real Chromium 131 browser.
+
 ## 1.2.0 (2026-11-11)
 
 Fixes from the rc1 review.

@@ -299,7 +299,7 @@ class quizaccess_examproctor extends access_rule_base {
         $strings = [];
         foreach (['camerarequired', 'camerabutton', 'fullscreenrequired', 'fullscreenbutton', 'autosubmit',
                 'warn_generic', 'active', 'active_preview', 'preview_note', 'ovl_camera_covered', 'ovl_video_frozen',
-                'dialoglabel', 'analysis_disabled_note'] as $key) {
+                'dialoglabel', 'analysis_disabled_note', 'fullscreen_waived'] as $key) {
             $strings[$key] = get_string('js_' . $key, $p);
         }
         foreach (['tab_hidden', 'window_blur', 'fullscreen_exit', 'copy', 'paste', 'contextmenu', 'camera_lost',

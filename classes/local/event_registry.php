@@ -77,7 +77,7 @@ class event_registry {
         'autosubmit_requested', 'autosubmit', 'webservice_blocked'];
 
     /** Events the report highlights as needing a look although they are not violations. */
-    const FLAGGED = ['multiple_sessions', 'quota_exceeded', 'analysis_disabled', 'extension_error'];
+    const FLAGGED = ['multiple_sessions', 'quota_exceeded', 'analysis_disabled', 'extension_error', 'fullscreen_unsupported'];
 
     /**
      * All event types.

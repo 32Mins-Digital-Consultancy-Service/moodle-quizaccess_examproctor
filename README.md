@@ -1,4 +1,4 @@
-# Exam Proctor Free (quizaccess_examproctor) 1.2.0
+# Exam Proctor Free (quizaccess_examproctor) 1.2.1
 
 Browser-based proctoring for Moodle quizzes. Free and complete on its own: no account, no licence, no limits.
 

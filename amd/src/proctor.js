@@ -93,6 +93,7 @@ define(['core/ajax'], function(Ajax) {
     var videoTimeSince = 0;
 
     var hiddenAt = 0;
+    var fullscreenWaived = false;  // The browser refused fullscreen: the quiz continues and the report shows it.
     var blurAt = 0;
 
     // Small per-attempt memory in this tab, so a page reload does not start from scratch.
@@ -338,9 +339,52 @@ define(['core/ajax'], function(Ajax) {
             startCamera();
         } else if (extra && extra.onClick) {
             extra.onClick();
-        } else if (blockers.fullscreen && document.documentElement.requestFullscreen) {
-            document.documentElement.requestFullscreen().catch(function() {
-                // Refused: the screen stays.
+        } else if (blockers.fullscreen) {
+            requestFullscreen();
+        }
+    };
+
+    /**
+     * The browser cannot or will not go fullscreen (policy, kiosk, frame, old device). Never lock the student out:
+     * continue without fullscreen, record it for the teacher, and do not ask again in this attempt.
+     *
+     * @param {String} reason
+     */
+    var waiveFullscreen = function(reason) {
+        if (fullscreenWaived || document.fullscreenElement) {
+            return;
+        }
+        fullscreenWaived = true;
+        store.set('fswaived', '1');
+        blockers.fullscreen = false;
+        sendEvent('fullscreen_unsupported', reason);
+        showBanner(strings.fullscreen_waived);
+        refreshOverlay();
+    };
+
+    var requestFullscreen = function() {
+        var el = document.documentElement;
+        if (!el.requestFullscreen) {
+            waiveFullscreen('requestFullscreen not available');
+            return;
+        }
+        var check = window.setTimeout(function() {
+            if (!document.fullscreenElement) {
+                waiveFullscreen('fullscreen did not start within 3 s');
+            }
+        }, 3000);
+        var request;
+        try {
+            request = el.requestFullscreen();
+        } catch (e) {
+            window.clearTimeout(check);
+            waiveFullscreen(e && e.name ? e.name : 'refused');
+            return;
+        }
+        if (request && request.catch) {
+            request.catch(function(e) {
+                window.clearTimeout(check);
+                waiveFullscreen((e && (e.name || e.message)) ? String(e.name || e.message).substring(0, 100) : 'refused');
             });
         }
     };
@@ -644,11 +688,12 @@ define(['core/ajax'], function(Ajax) {
                     sendEvent('fullscreen_unsupported', (navigator.userAgent || '').substring(0, 200));
                 }
             } else {
-                blockers.fullscreen = !document.fullscreenElement;
+                fullscreenWaived = store.get('fswaived') === '1';
+                blockers.fullscreen = !document.fullscreenElement && !fullscreenWaived;
                 document.addEventListener('fullscreenchange', function() {
                     if (document.fullscreenElement) {
                         blockers.fullscreen = false;
-                    } else {
+                    } else if (!fullscreenWaived) {
                         blockers.fullscreen = true;
                         if (!focusSuspended() && !submitting) {
                             report('fullscreen_exit');
