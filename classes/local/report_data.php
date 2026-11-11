@@ -36,7 +36,8 @@ class report_data {
     public static function summary_sql(int $quizid, string $search = '', bool $flaggedonly = false): array {
         global $DB;
 
-        $flagged = "'" . implode("','", event_registry::FLAGGED) . "'";
+        $types = array_filter(event_registry::flagged_types(), fn($t) => preg_match('/^[a-z0-9_]{1,30}$/', $t));
+        $flagged = "'" . implode("','", $types ?: ['-']) . "'";
         $params = ['quizid' => $quizid];
         $where = 'a.quiz = :quizid AND a.preview = 0';
         if ($search !== '') {
@@ -90,7 +91,8 @@ class report_data {
         ];
         if ($row->state === 'inprogress') {
             $last = (int) $row->lastevent;
-            $silentafter = helper::interval($settings) * 2 + 30;
+            // The browser sends a heartbeat every minute, and snapshots when the camera is on.
+            $silentafter = helper::camera_on($settings) ? max(150, helper::interval($settings) * 2 + 30) : 150;
             if (!$last) {
                 $out->live = get_string('live_nodata', 'quizaccess_examproctor');
                 $out->liveok = false;

@@ -1,4 +1,4 @@
-# Exam Proctor Free (quizaccess_examproctor) 1.1.1
+# Exam Proctor Free (quizaccess_examproctor) 1.2.0
 
 Browser-based proctoring for Moodle quizzes. Free and complete on its own: no account, no licence, no limits.
 
@@ -9,7 +9,9 @@ Browser-based proctoring for Moodle quizzes. Free and complete on its own: no ac
 - Stopped, refused, covered, black or frozen camera blocks the quiz and is recorded with an image
 - Tab switching and window focus loss, recorded with the time away
 - Fullscreen enforcement; copy, paste and right-click blocking
-- Auto-submit after N violations - the page is saved first, so typed answers are kept
+- Optional auto-submit after N violations (off for the whole site until an admin allows it); the page is saved first,
+  and if the browser does not submit it, a task does within a minute. A lasting problem counts once.
+- Heartbeat every minute, so quiet students are not reported as silent
 - "Learners may be under 18" mode: no camera, browser events only
 - Report: every attempt (attempts that sent nothing are listed first), live status, snapshots received vs expected,
   multiple-session flag, search and filters, paging, timeline with images, CSV / Excel / ODS / JSON export

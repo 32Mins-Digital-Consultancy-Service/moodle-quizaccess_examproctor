@@ -56,7 +56,7 @@ $string['requirefullscreen'] = 'Require fullscreen';
 $string['requirefullscreen_help'] = 'The quiz page is hidden until the student enters fullscreen. Browsers always leave fullscreen when a page reloads, so set Layout > New page to "Never, all questions on one page" for proctored quizzes.';
 $string['blockclipboard'] = 'Block copy, paste and right-click';
 $string['maxviolations'] = 'Violations before auto-submit';
-$string['maxviolations_help'] = 'The attempt is submitted automatically once this many violations are recorded. The page is saved first, so answers typed on it are kept. Set to 0 to never auto-submit.';
+$string['maxviolations_help'] = 'The attempt is submitted automatically once this many violations are recorded. The page is saved first, so answers typed on it are kept; if the browser does not submit it, the server does within about a minute. A problem that lasts (for example a frozen camera) counts once, not every time it is recorded again. Set to 0 to never auto-submit.';
 $string['maxviolationsinvalid'] = 'Enter 0 or a positive whole number.';
 $string['retentiondays'] = 'Keep proctoring data for (days)';
 $string['retentiondays_help'] = 'Events and webcam images of this quiz are deleted this many days after they were recorded. 0 uses the site default.';
@@ -186,3 +186,10 @@ $string['event_contextmenu'] = 'Tried to right-click';
 $string['event_analysis_disabled'] = 'Camera analysis switched off (computer too slow)';
 $string['event_extension_error'] = 'An extra check could not start';
 $string['event_autosubmit_now'] = 'Submit requested by the browser';
+
+// 1.2.0.
+$string['settings_allowautosubmit'] = 'Allow auto-submit after violations';
+$string['settings_allowautosubmit_desc'] = 'Off by default: violations are recorded and flagged for a teacher to judge, and no attempt is submitted automatically. When ticked, teachers can set "Violations before auto-submit" per quiz.';
+$string['task_enforceautosubmit'] = 'Submit attempts that reached the proctoring violation limit';
+$string['event_heartbeat'] = 'Browser still connected (last signal)';
+$string['event_problem_continues'] = 'Problem still going on';

@@ -46,6 +46,8 @@ define(['core/ajax'], function(Ajax) {
     var NOISE_DELTA = 0.5;        // Any pixel change above this means the feed is alive.
     var FROZEN_IDENTICAL_MS = 15000;
     var FROZEN_STALL_MS = 5000;
+    var WARMUP_MS = 5000;         // Ignore covered / frozen while the camera adjusts after starting.
+    var HEARTBEAT_MS = 60000;     // "Still here" signal, so a quiet student never looks silent in the report.
     var VIOLATION_TYPES = ['camera_denied', 'camera_lost', 'camera_covered', 'video_frozen', 'tab_hidden',
         'window_blur', 'fullscreen_exit', 'copy', 'paste', 'contextmenu'];
 
@@ -60,6 +62,7 @@ define(['core/ajax'], function(Ajax) {
     var cameraActive = false;
     var cameraFailed = false;
     var cameraGraceUntil = 0;
+    var cameraWarmUntil = 0;
 
     var overlay = null;
     var overlayText = null;
@@ -362,6 +365,7 @@ define(['core/ajax'], function(Ajax) {
             video.srcObject = mediaStream;
             video.play();
             cameraActive = true;
+            cameraWarmUntil = Date.now() + WARMUP_MS;
             blockers.camera = false;
             refreshOverlay();
             mediaStream.getVideoTracks().forEach(function(track) {
@@ -519,6 +523,12 @@ define(['core/ajax'], function(Ajax) {
         if (!cameraActive || !video || video.readyState < 2) {
             return;
         }
+        if (Date.now() < cameraWarmUntil) {
+            // Exposure and focus settle during the first seconds: a dark or still first frame is not a problem.
+            prevFrame = null;
+            videoTimeSince = 0;
+            return;
+        }
         var sample = sampleFrame();
         var result = coreCheck(sample) || runAnalysers(sample);
         var now = Date.now();
@@ -539,9 +549,15 @@ define(['core/ajax'], function(Ajax) {
         if (now - problemSince >= grace) {
             blockers.problem = result.soft ? null : result.type;
             refreshOverlay();
-            if (!lastProblemReport || now - lastProblemReport >= REPEAT_MS) {
+            if (!lastProblemReport) {
+                // A problem counts once, however long it lasts...
                 lastProblemReport = now;
                 sendEvent(result.type, result.details, captureFrame());
+            } else if (now - lastProblemReport >= REPEAT_MS) {
+                // ...while it goes on, evidence is kept without counting new violations.
+                lastProblemReport = now;
+                sendEvent('problem_continues', result.type + ' for ' + Math.round((now - problemSince) / 1000) + ' s' +
+                    (result.details ? ', ' + result.details : ''), captureFrame());
             }
         }
     };
@@ -782,6 +798,9 @@ define(['core/ajax'], function(Ajax) {
                 window.setInterval(takeSnapshot, cfg.snapshotinterval * 1000);
                 scheduleTick(TICK_MS);
             }
+            window.setInterval(function() {
+                sendEvent('heartbeat', '');
+            }, HEARTBEAT_MS);
             loadExtensions();
             refreshOverlay();
         }

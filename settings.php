@@ -28,6 +28,8 @@ if ($ADMIN->fulltree) {
     $p = 'quizaccess_examproctor';
     $settings->add(new admin_setting_configtext('quizaccess_examproctor/retentiondays',
         get_string('settings_retention', $p), get_string('settings_retention_desc', $p), 30, PARAM_INT));
+    $settings->add(new admin_setting_configcheckbox('quizaccess_examproctor/allowautosubmit',
+        get_string('settings_allowautosubmit', $p), get_string('settings_allowautosubmit_desc', $p), 0));
     $settings->add(new admin_setting_configcheckbox('quizaccess_examproctor/proctorpreviews',
         get_string('settings_proctorpreviews', $p), get_string('settings_proctorpreviews_desc', $p), 0));
 }

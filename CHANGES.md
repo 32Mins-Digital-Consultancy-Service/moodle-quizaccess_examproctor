@@ -1,5 +1,21 @@
 # Changes
 
+## 1.2.0 (2026-11-11)
+
+Fixes from the rc1 review.
+
+- Quota flood: harmless events and violations have separate quotas; filling the harmless quota can no longer stop
+  violations being recorded; over the image quota the event is kept and only the image dropped.
+- Heartbeat: the browser sends a heartbeat every minute (one row per attempt, updated in place), so a quiet honest
+  student with the camera off or in under-18 mode no longer shows as SILENT.
+- Repeat counting: a problem that lasts (frozen or covered camera) counts once; while it continues it is recorded
+  as "Problem still going on" with an image, not as new violations. The same violation within 5 s counts once.
+  Camera warm-up: the first 5 s after the camera starts are not judged.
+- Auto-submit dodge: a scheduled task (every minute) submits attempts that reached the limit when the browser did not.
+- Rules: auto-submit after violations is off for the whole site until an admin allows it ("never auto-penalties").
+- Real minified JavaScript (terser) with source maps; PHPUnit tests and a moodle-plugin-ci workflow.
+- Extension event types can be flagged for review in the report.
+
 ## 1.1.1 (2026-11-10)
 
 - Fix (critical, 1.1.0 only): the browser script stopped at start-up ("Cannot read properties of undefined

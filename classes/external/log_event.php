@@ -44,6 +44,15 @@ class log_event extends external_api {
     /** Hard cap on images per attempt. */
     const MAX_IMAGES = 3000;
 
+    /** Violations kept per attempt (disk guard only: violations are never dropped by the event quota). */
+    const MAX_VIOLATIONS = 2000;
+
+    /** The same violation type again within this many seconds is recorded as a repeat, not a new violation. */
+    const REPEAT_SECONDS = 5;
+
+    /** Heartbeats closer together than this are ignored. */
+    const HEARTBEAT_MIN_GAP = 20;
+
     /** Seconds the browser gets to submit the page itself before the server finishes the attempt. */
     const AUTOSUBMIT_GRACE = 20;
 
@@ -111,15 +120,6 @@ class log_event extends external_api {
             throw new \invalid_parameter_exception('Unknown event type');
         }
 
-        // Flood control: the browser decides the cadence, so the server must cap it.
-        $quota = self::check_quota($attempt, $settings, $params['imagedata'] !== '');
-        if ($quota !== '') {
-            $result['status'] = 'quota';
-            return $result;
-        }
-
-        $max = (int) $settings->maxviolations;
-
         // Auto-submit, step 2: the browser asks to finish (no page form available), or it ignored step 1.
         $requested = $DB->get_field('quizaccess_examproctor_log', 'MIN(timecreated)',
             ['attemptid' => $attempt->id, 'eventtype' => 'autosubmit_requested']);
@@ -130,13 +130,45 @@ class log_event extends external_api {
             return $result;
         }
 
+        // Heartbeat: one row per attempt, updated in place, so a quiet student never looks silent.
+        if ($type === 'heartbeat') {
+            return self::heartbeat($attempt, $result);
+        }
+
+        // Flood control. Harmless events and violations have separate quotas, so filling one with harmless
+        // events can never stop real violations being recorded; images over their quota are dropped, not events.
+        $quota = self::check_quota($attempt, $settings, (bool) $def->violation, $params['imagedata'] !== '');
+        if ($quota === 'drop') {
+            $result['status'] = 'quota';
+            return $result;
+        }
+        if ($quota === 'noimage') {
+            if ($type === 'snapshot') {
+                $result['status'] = 'quota';
+                return $result;
+            }
+            $params['imagedata'] = '';
+        }
+
+        $max = helper::autosubmit_allowed() ? (int) $settings->maxviolations : 0;
+
+        $isviolation = $def->violation ? 1 : 0;
+        $details = $params['details'];
+        if ($isviolation && $DB->record_exists_select('quizaccess_examproctor_log',
+                'attemptid = ? AND eventtype = ? AND isviolation = 1 AND timecreated >= ?',
+                [$attempt->id, $type, time() - self::REPEAT_SECONDS])) {
+            // The same problem reported again within seconds (two tabs, a retry): keep it, but count it once.
+            $isviolation = 0;
+            $details = '(repeat) ' . $details;
+        }
+
         $log = (object) [
             'quizid' => $quiz->id,
             'attemptid' => $attempt->id,
             'userid' => $USER->id,
             'eventtype' => $type,
-            'details' => \core_text::substr($params['details'], 0, 255),
-            'isviolation' => $def->violation ? 1 : 0,
+            'details' => \core_text::substr($details, 0, 255),
+            'isviolation' => $isviolation,
             'hassnapshot' => 0,
             'timecreated' => time(),
         ];
@@ -161,7 +193,7 @@ class log_event extends external_api {
             self::check_sessions($attempt);
         }
 
-        if ($def->violation) {
+        if ($isviolation) {
             \quizaccess_examproctor\event\violation_recorded::create([
                 'objectid' => $attempt->id,
                 'relateduserid' => $attempt->userid,
@@ -178,10 +210,11 @@ class log_event extends external_api {
         $result['status'] = 'ok';
         $result['violations'] = $violations;
         $result['maxviolations'] = $max;
-        $result['violation'] = (bool) $def->violation;
+        $result['violation'] = (bool) $isviolation;
 
         // Auto-submit, step 1: ask the browser to submit the page so answers typed since the last autosave are kept.
-        if ($def->violation && $max > 0 && $violations >= $max && !$requested) {
+        // If it does not, the next call, the next page load or the enforce_autosubmit task (every minute) finishes it.
+        if ($isviolation && $max > 0 && $violations >= $max && !$requested) {
             helper::log($attempt, 'autosubmit_requested', 'Violation limit reached (' . $violations . ')');
             $result['submitnow'] = true;
         }
@@ -217,34 +250,68 @@ class log_event extends external_api {
     }
 
     /**
-     * Per-attempt quotas. Returns '' when within limits, else the reason (logged once per attempt).
+     * Per-attempt quotas.
      *
      * @param \stdClass $attempt
      * @param \stdClass $settings
+     * @param bool $violation
      * @param bool $withimage
-     * @return string
+     * @return string '' (ok), 'noimage' (record without the image) or 'drop'
      */
-    protected static function check_quota(\stdClass $attempt, \stdClass $settings, bool $withimage): string {
+    protected static function check_quota(\stdClass $attempt, \stdClass $settings, bool $violation,
+            bool $withimage): string {
         global $DB;
 
         $elapsed = max(0, time() - (int) $attempt->timestart);
-        $events = $DB->count_records('quizaccess_examproctor_log', ['attemptid' => $attempt->id]);
         $reason = '';
-        if ($events >= min(self::MAX_EVENTS, $elapsed + self::EVENT_BURST)) {
-            $reason = 'events';
-        } else if ($withimage) {
+        $outcome = '';
+        if ($violation) {
+            if ($DB->count_records('quizaccess_examproctor_log', ['attemptid' => $attempt->id, 'isviolation' => 1])
+                    >= self::MAX_VIOLATIONS) {
+                $reason = 'violations';
+                $outcome = 'drop';
+            }
+        } else {
+            $others = $DB->count_records('quizaccess_examproctor_log', ['attemptid' => $attempt->id, 'isviolation' => 0]);
+            if ($others >= min(self::MAX_EVENTS, $elapsed + self::EVENT_BURST)) {
+                $reason = 'events';
+                $outcome = 'drop';
+            }
+        }
+        if ($outcome === '' && $withimage) {
             $images = $DB->count_records('quizaccess_examproctor_log', ['attemptid' => $attempt->id, 'hassnapshot' => 1]);
             $expected = helper::expected_snapshots($settings, (int) $attempt->timestart, time());
             $allowed = (int) ceil($expected * 1.5) + intdiv($elapsed, 15) + self::IMAGE_BURST;
             if ($images >= min(self::MAX_IMAGES, $allowed)) {
                 $reason = 'images';
+                $outcome = 'noimage';
             }
         }
         if ($reason !== '' && !$DB->record_exists('quizaccess_examproctor_log',
-                ['attemptid' => $attempt->id, 'eventtype' => 'quota_exceeded'])) {
+                ['attemptid' => $attempt->id, 'eventtype' => 'quota_exceeded', 'details' => $reason])) {
             helper::log($attempt, 'quota_exceeded', $reason);
         }
-        return $reason;
+        return $outcome;
+    }
+
+    /**
+     * Record a heartbeat by updating the attempt's single heartbeat row.
+     *
+     * @param \stdClass $attempt
+     * @param array $result
+     * @return array
+     */
+    protected static function heartbeat(\stdClass $attempt, array $result): array {
+        global $DB;
+        $row = $DB->get_record('quizaccess_examproctor_log', ['attemptid' => $attempt->id, 'eventtype' => 'heartbeat']);
+        if (!$row) {
+            helper::log($attempt, 'heartbeat', '1');
+        } else if (time() - (int) $row->timecreated >= self::HEARTBEAT_MIN_GAP) {
+            $DB->update_record('quizaccess_examproctor_log', (object) ['id' => $row->id, 'timecreated' => time(),
+                'details' => (string) ((int) $row->details + 1)]);
+        }
+        $result['status'] = 'ok';
+        return $result;
     }
 
     /**

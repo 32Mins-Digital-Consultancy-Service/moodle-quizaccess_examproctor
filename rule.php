@@ -172,7 +172,7 @@ class quizaccess_examproctor extends access_rule_base {
             di::get(hook_manager::class)->dispatch($hook);
             $items = array_merge($items, $hook->get_items());
         }
-        if ((int) $this->settings->maxviolations > 0) {
+        if (helper::autosubmit_allowed() && (int) $this->settings->maxviolations > 0) {
             $items[] = get_string('consent_maxviolations', $p, (int) $this->settings->maxviolations);
         }
         $items[] = get_string('consent_retention', $p, helper::retention_days($this->settings) ?: '-');
@@ -373,10 +373,15 @@ class quizaccess_examproctor extends access_rule_base {
         $mform->addElement('selectyesno', 'examproctor_blockclipboard', get_string('blockclipboard', $p));
         $mform->setDefault('examproctor_blockclipboard', 1);
 
-        $mform->addElement('text', 'examproctor_maxviolations', get_string('maxviolations', $p), ['size' => 4]);
-        $mform->setType('examproctor_maxviolations', PARAM_INT);
-        $mform->setDefault('examproctor_maxviolations', 0);
-        $mform->addHelpButton('examproctor_maxviolations', 'maxviolations', $p);
+        if (helper::autosubmit_allowed()) {
+            $mform->addElement('text', 'examproctor_maxviolations', get_string('maxviolations', $p), ['size' => 4]);
+            $mform->setType('examproctor_maxviolations', PARAM_INT);
+            $mform->setDefault('examproctor_maxviolations', 0);
+            $mform->addHelpButton('examproctor_maxviolations', 'maxviolations', $p);
+        } else {
+            $mform->addElement('hidden', 'examproctor_maxviolations', 0);
+            $mform->setType('examproctor_maxviolations', PARAM_INT);
+        }
 
         $mform->addElement('text', 'examproctor_retentiondays', get_string('retentiondays', $p), ['size' => 4]);
         $mform->setType('examproctor_retentiondays', PARAM_INT);
@@ -406,7 +411,7 @@ class quizaccess_examproctor extends access_rule_base {
     public static function validate_settings_form_fields(array $errors, array $data, $files, $quizform) {
         $p = 'quizaccess_examproctor';
         if (!empty($data['examproctor_enabled'])) {
-            if (!isset($data['examproctor_maxviolations']) || (int) $data['examproctor_maxviolations'] < 0) {
+            if (isset($data['examproctor_maxviolations']) && (int) $data['examproctor_maxviolations'] < 0) {
                 $errors['examproctor_maxviolations'] = get_string('maxviolationsinvalid', $p);
             }
             if (isset($data['examproctor_retentiondays'])
@@ -444,7 +449,8 @@ class quizaccess_examproctor extends access_rule_base {
                 'snapshotinterval' => max(30, (int) ($quiz->examproctor_snapshotinterval ?? 60)),
                 'requirefullscreen' => empty($quiz->examproctor_requirefullscreen) ? 0 : 1,
                 'blockclipboard' => empty($quiz->examproctor_blockclipboard) ? 0 : 1,
-                'maxviolations' => max(0, (int) ($quiz->examproctor_maxviolations ?? 0)),
+                'maxviolations' => helper::autosubmit_allowed() ? max(0, (int) ($quiz->examproctor_maxviolations ?? 0))
+                    : (int) ($existing->maxviolations ?? 0),
                 'retentiondays' => min(3650, max(0, (int) ($quiz->examproctor_retentiondays ?? 0))),
             ];
             if ($existing) {

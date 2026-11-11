@@ -63,6 +63,15 @@ class helper {
     }
 
     /**
+     * Whether the site allows auto-submit after violations (site setting, off by default).
+     *
+     * @return bool
+     */
+    public static function autosubmit_allowed(): bool {
+        return (bool) get_config('quizaccess_examproctor', 'allowautosubmit');
+    }
+
+    /**
      * Retention period in days for a quiz (0 = keep).
      *
      * @param \stdClass $settings

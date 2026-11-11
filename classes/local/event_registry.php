@@ -68,6 +68,8 @@ class event_registry {
         'analysis_disabled' => [0, 0],
         'extension_error' => [0, 0],
         'autosubmit_now' => [0, 0],
+        'heartbeat' => [0, 0],
+        'problem_continues' => [0, 1],
     ];
 
     /** Events that are only ever written by the server, never accepted from the browser. */
@@ -94,6 +96,7 @@ class event_registry {
                 'maxw' => $image ? self::CAM_W : 0,
                 'maxh' => $image ? self::CAM_H : 0,
                 'maxbytes' => $image ? self::CAM_BYTES : 0,
+                'flag' => in_array($type, self::FLAGGED, true),
             ];
         }
         $hook = new event_types();
@@ -105,6 +108,21 @@ class event_registry {
         }
         self::$types = $types;
         return $types;
+    }
+
+    /**
+     * Types the report highlights for review (core list plus types other plugins flag).
+     *
+     * @return string[]
+     */
+    public static function flagged_types(): array {
+        $out = [];
+        foreach (self::all() as $type => $def) {
+            if (!empty($def->flag)) {
+                $out[] = $type;
+            }
+        }
+        return $out;
     }
 
     /**
