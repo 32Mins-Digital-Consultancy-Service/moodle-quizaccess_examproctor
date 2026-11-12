@@ -48,6 +48,13 @@ class provider implements
             'hassnapshot' => 'privacy:metadata:log:hassnapshot',
             'timecreated' => 'privacy:metadata:log:timecreated',
         ], 'privacy:metadata:log');
+        $collection->add_database_table('quizaccess_examproctor_consent', [
+            'userid' => 'privacy:metadata:consent:userid',
+            'attemptid' => 'privacy:metadata:consent:attemptid',
+            'version' => 'privacy:metadata:consent:version',
+            'notice' => 'privacy:metadata:consent:notice',
+            'timecreated' => 'privacy:metadata:consent:timecreated',
+        ], 'privacy:metadata:consent');
         $collection->add_subsystem_link('core_files', [], 'privacy:metadata:files');
         $collection->add_subsystem_link('core_sessions', [], 'privacy:metadata:session');
         return $collection;
@@ -110,8 +117,15 @@ class provider implements
                         self::COMPONENT, 'snapshots', $log->id);
                 }
             }
-            if ($events) {
-                writer::with_context($context)->export_data($subcontext, (object) ['events' => $events]);
+            $consents = [];
+            foreach ($DB->get_records('quizaccess_examproctor_consent', ['quizid' => $cm->instance, 'userid' => $userid],
+                    'timecreated ASC') as $c) {
+                $consents[] = (object) ['attemptid' => $c->attemptid, 'version' => $c->version, 'notice' => $c->notice,
+                    'timecreated' => transform::datetime($c->timecreated)];
+            }
+            if ($events || $consents) {
+                writer::with_context($context)->export_data($subcontext, (object) ['events' => $events,
+                    'consents' => $consents]);
             }
         }
     }
@@ -127,6 +141,7 @@ class provider implements
             return;
         }
         $DB->delete_records('quizaccess_examproctor_log', ['quizid' => $cm->instance]);
+        $DB->delete_records('quizaccess_examproctor_consent', ['quizid' => $cm->instance]);
         $fs = get_file_storage();
         $fs->delete_area_files($context->id, self::COMPONENT, 'snapshots');
     }
@@ -169,5 +184,6 @@ class provider implements
             $fs->delete_area_files($context->id, self::COMPONENT, 'snapshots', $logid);
         }
         $DB->delete_records_select('quizaccess_examproctor_log', "quizid = :quizid AND userid $insql", $params);
+        $DB->delete_records_select('quizaccess_examproctor_consent', "quizid = :quizid AND userid $insql", $params);
     }
 }

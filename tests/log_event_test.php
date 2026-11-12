@@ -83,10 +83,10 @@ final class log_event_test extends \advanced_testcase {
 
     public function test_repeated_problem_counts_once(): void {
         $attempt = $this->make_attempt();
-        log_event::execute($attempt->id, 'video_frozen', 'stalled');
-        $again = log_event::execute($attempt->id, 'video_frozen', 'stalled');
+        log_event::execute($attempt->id, 'camera_covered', 'brightness 4');
+        $again = log_event::execute($attempt->id, 'camera_covered', 'brightness 4');
         $this->assertFalse($again['violation']);
-        $continues = log_event::execute($attempt->id, 'problem_continues', 'video_frozen for 15 s');
+        $continues = log_event::execute($attempt->id, 'problem_continues', 'camera_covered for 15 s');
         $this->assertFalse($continues['violation']);
         $this->assertSame(1, $continues['violations']);
     }
@@ -126,6 +126,18 @@ final class log_event_test extends \advanced_testcase {
         (new \quizaccess_examproctor\task\enforce_autosubmit())->execute();
         ob_end_clean();
         $this->assertSame('finished', $DB->get_field('quiz_attempts', 'state', ['id' => $attempt->id]));
+    }
+
+    public function test_camera_faults_flagged_not_counted(): void {
+        $attempt = $this->make_attempt();
+        foreach (['camera_denied', 'camera_lost', 'video_frozen'] as $type) {
+            $result = log_event::execute($attempt->id, $type, 'fault');
+            $this->assertFalse($result['violation']);
+        }
+        $this->assertSame(0, $result['violations']);
+        $flagged = \quizaccess_examproctor\local\event_registry::flagged_types();
+        $this->assertContains('camera_lost', $flagged);
+        $this->assertContains('video_frozen', $flagged);
     }
 
     public function test_server_only_type_refused(): void {

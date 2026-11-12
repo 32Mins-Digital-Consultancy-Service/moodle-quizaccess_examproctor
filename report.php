@@ -38,6 +38,10 @@ $violationsonly = optional_param('violationsonly', 0, PARAM_BOOL);
 $page = optional_param('page', 0, PARAM_INT);
 $delete = optional_param('delete', 0, PARAM_INT);
 $confirm = optional_param('confirm', 0, PARAM_BOOL);
+$sort = optional_param('sort', 'needs', PARAM_ALPHA);
+if (!in_array($sort, \quizaccess_examproctor\local\report_data::SORTS, true)) {
+    $sort = 'needs';
+}
 
 [$course, $cm] = get_course_and_cm_from_cmid($cmid, 'quiz');
 require_login($course, false, $cm);
@@ -53,6 +57,9 @@ if ($search !== '') {
 }
 if ($flaggedonly) {
     $baseparams['flagged'] = 1;
+}
+if ($sort !== 'needs') {
+    $baseparams['sort'] = $sort;
 }
 $url = new moodle_url('/mod/quiz/accessrule/examproctor/report.php', $baseparams + ($attemptid ? ['attemptid' => $attemptid] : []));
 $PAGE->set_url($url);
@@ -169,6 +176,14 @@ if ($attemptid) {
     // Detail view: one attempt's timeline.
     $attempt = $DB->get_record('quiz_attempts', ['id' => $attemptid, 'quiz' => $cm->instance], '*', MUST_EXIST);
     $names = helper::names([$attempt->userid]);
+    if (!$page) {
+        \quizaccess_examproctor\event\evidence_viewed::create([
+            'objectid' => $attempt->id,
+            'relateduserid' => $attempt->userid,
+            'context' => $context,
+            'other' => ['quizid' => (int) $cm->instance],
+        ])->trigger();
+    }
 
     echo html_writer::tag('p', html_writer::link(new moodle_url('/mod/quiz/accessrule/examproctor/report.php',
         ['cmid' => $cmid]), get_string('backtosummary', $p)));
@@ -238,6 +253,12 @@ if ($attemptid) {
     echo html_writer::empty_tag('input', ['type' => 'search', 'name' => 'search', 'id' => 'examproctor-search',
         'value' => $search, 'placeholder' => get_string('searchstudent', $p), 'class' => 'form-control w-auto']);
     echo html_writer::checkbox('flagged', 1, (bool) $flaggedonly, get_string('flaggedonly', $p), ['class' => 'ms-2']);
+    $sorts = [];
+    foreach (\quizaccess_examproctor\local\report_data::SORTS as $key) {
+        $sorts[$key] = get_string('sort_' . $key, $p);
+    }
+    echo html_writer::label(get_string('sortby', $p), 'examproctor-sort', false, ['class' => 'ms-2']);
+    echo html_writer::select($sorts, 'sort', $sort, false, ['id' => 'examproctor-sort', 'class' => 'form-select w-auto']);
     echo html_writer::empty_tag('input', ['type' => 'submit', 'value' => get_string('filter'), 'class' => 'btn btn-secondary']);
     echo html_writer::end_tag('form');
 
@@ -250,7 +271,7 @@ if ($attemptid) {
     }
     echo html_writer::div(implode('', $dl), 'mb-2');
 
-    [$sql, $countsql, $params] = report_data::summary_sql((int) $cm->instance, $search, (bool) $flaggedonly);
+    [$sql, $countsql, $params] = report_data::summary_sql((int) $cm->instance, $search, (bool) $flaggedonly, $sort);
     $perpage = 50;
     $total = $DB->count_records_sql($countsql, $params);
     $rows = $DB->get_records_sql($sql, $params, $page * $perpage, $perpage);
@@ -261,7 +282,7 @@ if ($attemptid) {
         $names = helper::names(array_map(fn($r) => $r->userid, $rows));
         $table = new html_table();
         $table->head = [get_string('user', $p), get_string('attempt', $p), get_string('livestatus', $p),
-            get_string('violations', $p), get_string('snapshotsreceived', $p), get_string('flags', $p), ''];
+            get_string('integrity', $p), get_string('snapshotsreceived', $p), get_string('flags', $p), ''];
         $table->attributes['class'] = 'generaltable';
         foreach ($rows as $row) {
             $a = report_data::assess($row, $settings);
@@ -286,7 +307,8 @@ if ($attemptid) {
                 s($names[$row->userid] ?? $row->userid),
                 $row->attempt,
                 $status,
-                (int) $row->violations,
+                get_string('integrity_line', $p, (object) ['violations' => (int) $row->violations, 'flags' => (int) $row->flags,
+                    'missing' => max(0, $a->expected - (int) $row->snapshots), 'sessions' => (int) $row->sessions]),
                 $snaps,
                 implode(' ', $flags),
                 html_writer::link(new moodle_url('/mod/quiz/accessrule/examproctor/report.php',

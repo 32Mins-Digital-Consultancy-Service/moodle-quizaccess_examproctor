@@ -25,15 +25,20 @@ namespace quizaccess_examproctor\local;
  */
 class report_data {
 
+    /** Sort orders offered in the report. */
+    const SORTS = ['needs', 'violations', 'name', 'recent'];
+
     /**
      * SQL for the summary rows.
      *
      * @param int $quizid
      * @param string $search part of the student's name or e-mail
      * @param bool $flaggedonly only attempts with violations or flags
+     * @param string $sort one of SORTS
      * @return array [select sql, count sql, params]
      */
-    public static function summary_sql(int $quizid, string $search = '', bool $flaggedonly = false): array {
+    public static function summary_sql(int $quizid, string $search = '', bool $flaggedonly = false,
+            string $sort = 'needs'): array {
         global $DB;
 
         $types = array_filter(event_registry::flagged_types(), fn($t) => preg_match('/^[a-z0-9_]{1,30}$/', $t));
@@ -50,11 +55,20 @@ class report_data {
                  JOIN {user} u ON u.id = a.userid
             LEFT JOIN {quizaccess_examproctor_log} l ON l.attemptid = a.id
                 WHERE $where";
-        $group = 'GROUP BY a.id, a.attempt, a.userid, a.state, a.timestart, a.timefinish';
+        $group = 'GROUP BY a.id, a.attempt, a.userid, a.state, a.timestart, a.timefinish, u.lastname, u.firstname';
         $having = $flaggedonly
             ? "HAVING SUM(CASE WHEN l.isviolation = 1 OR l.eventtype IN ($flagged) THEN 1 ELSE 0 END) > 0
                    OR SUM(CASE WHEN l.eventtype = 'session_start' THEN 1 ELSE 0 END) = 0"
             : '';
+        $needs = "CASE WHEN SUM(CASE WHEN l.eventtype = 'session_start' THEN 1 ELSE 0 END) = 0 THEN 0 ELSE 1 END,
+                   SUM(CASE WHEN l.isviolation = 1 THEN 1 ELSE 0 END) + SUM(CASE WHEN l.eventtype IN ($flagged) THEN 1 ELSE 0 END) DESC";
+        $orders = [
+            'needs' => "$needs, a.timestart DESC",
+            'violations' => 'SUM(CASE WHEN l.isviolation = 1 THEN 1 ELSE 0 END) DESC, a.timestart DESC',
+            'name' => 'u.lastname, u.firstname, a.attempt',
+            'recent' => 'a.timestart DESC',
+        ];
+        $order = $orders[$sort] ?? $orders['needs'];
         $select = "SELECT a.id AS attemptid, a.attempt, a.userid, a.state, a.timestart, a.timefinish,
                           COUNT(l.id) AS events,
                           SUM(CASE WHEN l.isviolation = 1 THEN 1 ELSE 0 END) AS violations,
@@ -65,8 +79,7 @@ class report_data {
                           MAX(CASE WHEN l.eventtype = 'proctoring_started' OR l.eventtype = 'consent' THEN 0
                                    ELSE l.timecreated END) AS lastevent
                      $from $group $having
-                 ORDER BY CASE WHEN SUM(CASE WHEN l.eventtype = 'session_start' THEN 1 ELSE 0 END) = 0 THEN 0 ELSE 1 END,
-                          violations DESC, a.timestart DESC";
+                 ORDER BY $order";
         $count = "SELECT COUNT(1) FROM (SELECT a.id $from $group $having) t";
         return [$select, $count, $params];
     }

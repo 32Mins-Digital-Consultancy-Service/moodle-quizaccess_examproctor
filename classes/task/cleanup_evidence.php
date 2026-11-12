@@ -57,6 +57,7 @@ class cleanup_evidence extends \core\task\scheduled_task {
                 // Quiz gone: rows are orphans.
                 $total += $DB->count_records_select('quizaccess_examproctor_log', 'quizid = ?', [$quizid]);
                 $DB->delete_records('quizaccess_examproctor_log', ['quizid' => $quizid]);
+                $DB->delete_records('quizaccess_examproctor_consent', ['quizid' => $quizid]);
                 continue;
             }
             $context = \context_module::instance($cm->id);

@@ -27,12 +27,12 @@ use quizaccess_examproctor\hook\event_types;
  */
 class event_registry {
 
-    /** Webcam snapshot / evidence frame limits. */
-    const CAM_W = 640;
+    /** Webcam snapshot / evidence frame limits: the browser sends 320 x 240 JPEGs (about 15-40 KB). */
+    const CAM_W = 320;
     /** Webcam image height limit. */
-    const CAM_H = 480;
+    const CAM_H = 240;
     /** Webcam image size limit in bytes. */
-    const CAM_BYTES = 512000;
+    const CAM_BYTES = 120000;
 
     /** @var array|null cached definitions */
     protected static ?array $types = null;
@@ -48,14 +48,14 @@ class event_registry {
         'quota_exceeded' => [0, 0],
         'autosubmit_requested' => [0, 0],
         'autosubmit' => [0, 0],
-        'webservice_blocked' => [0, 0],
         // Sent by the browser.
         'session_start' => [0, 0],
         'snapshot' => [0, 1],
-        'camera_denied' => [1, 0],
-        'camera_lost' => [1, 1],
+        // Technical faults (refused, stopped, frozen camera) are recorded and flagged, never counted as violations.
+        'camera_denied' => [0, 0],
+        'camera_lost' => [0, 1],
         'camera_covered' => [1, 1],
-        'video_frozen' => [1, 1],
+        'video_frozen' => [0, 1],
         'tab_hidden' => [1, 0],
         'tab_returned' => [0, 0],
         'window_blur' => [1, 0],
@@ -74,10 +74,11 @@ class event_registry {
 
     /** Events that are only ever written by the server, never accepted from the browser. */
     const SERVER_ONLY = ['proctoring_started', 'consent', 'multiple_sessions', 'quota_exceeded',
-        'autosubmit_requested', 'autosubmit', 'webservice_blocked'];
+        'autosubmit_requested', 'autosubmit'];
 
     /** Events the report highlights as needing a look although they are not violations. */
-    const FLAGGED = ['multiple_sessions', 'quota_exceeded', 'analysis_disabled', 'extension_error', 'fullscreen_unsupported'];
+    const FLAGGED = ['multiple_sessions', 'quota_exceeded', 'analysis_disabled', 'extension_error', 'fullscreen_unsupported',
+        'camera_denied', 'camera_lost', 'video_frozen'];
 
     /**
      * All event types.

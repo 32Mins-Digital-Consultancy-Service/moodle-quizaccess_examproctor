@@ -194,6 +194,23 @@ class quizaccess_examproctor extends access_rule_base {
 
         $mform->addElement('header', 'examproctorheader', get_string('pluginname', $p));
         $mform->addElement('static', 'examproctorintro', '', $html);
+        if (helper::camera_on($this->settings)) {
+            // Device check before the attempt, so camera permission is granted before the exam timer starts.
+            $check = html_writer::tag('button', get_string('devicecheck_button', $p), ['type' => 'button',
+                'class' => 'btn btn-secondary btn-sm', 'data-examproctor-devicecheck' => '1']);
+            $check .= html_writer::tag('video', '', ['class' => 'examproctor-devicecheck-video d-none mt-2',
+                'muted' => 'muted', 'playsinline' => 'playsinline', 'width' => 160, 'height' => 120,
+                'aria-label' => get_string('devicecheck_preview', $p)]);
+            $check .= html_writer::div('', 'examproctor-devicecheck-status small mt-1', ['role' => 'status']);
+            $mform->addElement('static', 'examproctordevicecheck', get_string('devicecheck', $p),
+                html_writer::div($check, 'examproctor-devicecheck'));
+            global $PAGE;
+            $PAGE->requires->js_call_amd('quizaccess_examproctor/devicecheck', 'init', [[
+                'ok' => get_string('devicecheck_ok', $p),
+                'fail' => get_string('devicecheck_fail', $p),
+                'insecure' => get_string('devicecheck_insecure', $p),
+            ]]);
+        }
         $mform->addElement('checkbox', 'examproctorconsent', '', get_string('consent_checkbox', $p));
     }
 
@@ -223,10 +240,12 @@ class quizaccess_examproctor extends access_rule_base {
         if (!isset($SESSION->quizaccess_examproctor_consent)) {
             $SESSION->quizaccess_examproctor_consent = [];
         }
+        $items = $this->consent_items();
         $SESSION->quizaccess_examproctor_consent[$this->quizobj->get_quizid()] = [
             'time' => time(),
             'version' => helper::CONSENT_VERSION,
-            'items' => count($this->consent_items()),
+            'items' => count($items),
+            'text' => implode("\n", $items),
         ];
     }
 
@@ -244,8 +263,22 @@ class quizaccess_examproctor extends access_rule_base {
         $quizid = $this->quizobj->get_quizid();
         $pending = $SESSION->quizaccess_examproctor_consent[$quizid] ?? null;
         if ($pending && !$DB->record_exists('quizaccess_examproctor_log', ['attemptid' => $attempt->id, 'eventtype' => 'consent'])) {
-            $id = helper::log($attempt, 'consent', 'notice ' . $pending['version'] . ', ' . $pending['items'] . ' items');
+            $text = (string) ($pending['text'] ?? '');
+            $hash = hash('sha256', $pending['version'] . "\n" . $text);
+            $id = helper::log($attempt, 'consent', 'notice ' . $pending['version'] . ', ' . $pending['items'] . ' items, sha256 ' .
+                substr($hash, 0, 16));
             $DB->set_field('quizaccess_examproctor_log', 'timecreated', (int) $pending['time'], ['id' => $id]);
+            if (!$DB->record_exists('quizaccess_examproctor_consent', ['attemptid' => $attempt->id])) {
+                $DB->insert_record('quizaccess_examproctor_consent', (object) [
+                    'quizid' => $attempt->quiz,
+                    'attemptid' => $attempt->id,
+                    'userid' => $attempt->userid,
+                    'version' => $pending['version'],
+                    'texthash' => $hash,
+                    'notice' => $text,
+                    'timecreated' => (int) $pending['time'],
+                ]);
+            }
             unset($SESSION->quizaccess_examproctor_consent[$quizid]);
             \quizaccess_examproctor\event\consent_given::create([
                 'objectid' => $attempt->id,
@@ -299,7 +332,7 @@ class quizaccess_examproctor extends access_rule_base {
         $strings = [];
         foreach (['camerarequired', 'camerabutton', 'fullscreenrequired', 'fullscreenbutton', 'autosubmit',
                 'warn_generic', 'active', 'active_preview', 'preview_note', 'ovl_camera_covered', 'ovl_video_frozen',
-                'dialoglabel', 'analysis_disabled_note', 'fullscreen_waived'] as $key) {
+                'dialoglabel', 'analysis_disabled_note', 'fullscreen_waived', 'selfview_toggle'] as $key) {
             $strings[$key] = get_string('js_' . $key, $p);
         }
         foreach (['tab_hidden', 'window_blur', 'fullscreen_exit', 'copy', 'paste', 'contextmenu', 'camera_lost',
@@ -475,6 +508,7 @@ class quizaccess_examproctor extends access_rule_base {
 
         $DB->delete_records('quizaccess_examproctor', ['quizid' => $quiz->id]);
         $DB->delete_records('quizaccess_examproctor_log', ['quizid' => $quiz->id]);
+        $DB->delete_records('quizaccess_examproctor_consent', ['quizid' => $quiz->id]);
 
         $cm = get_coursemodule_from_instance('quiz', $quiz->id, $quiz->course, false, IGNORE_MISSING);
         if ($cm) {

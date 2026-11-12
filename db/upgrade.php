@@ -103,9 +103,9 @@ function xmldb_quizaccess_examproctor_upgrade($oldversion) {
     }
 
     if ($oldversion < 2026110700) {
-        // 1.0.0: free core. Camera-analysis, identity, microphone and screen settings move to a separate
-        // plugin that extends this one through hooks. Their per-quiz values are kept in a config value so the
-        // extending plugin can import them on install; identity photos from the alpha are deleted.
+        // 1.0.0: camera-analysis, identity, microphone and screen settings are no longer part of this plugin;
+        // other plugins can extend this one through hooks. The per-quiz values are kept in a config value for
+        // them to import; identity photos from the alpha are deleted.
         $table = new xmldb_table('quizaccess_examproctor');
 
         $moved = ['detectface', 'maxyaw', 'maxpitch', 'facegrace', 'detectmotion', 'motionsens', 'idmode',
@@ -141,7 +141,7 @@ function xmldb_quizaccess_examproctor_upgrade($oldversion) {
         $field = new xmldb_field('snapshotinterval', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '60');
         $dbman->change_field_default($table, $field);
 
-        // Identity verification moved out of the core: delete the alpha's photos and table.
+        // Identity verification is no longer part of this plugin: delete the alpha's photos and table.
         $idtable = new xmldb_table('quizaccess_examproctor_id');
         if ($dbman->table_exists($idtable)) {
             $fs = get_file_storage();
@@ -172,6 +172,33 @@ function xmldb_quizaccess_examproctor_upgrade($oldversion) {
         unset_config('idretentiondays', 'quizaccess_examproctor');
 
         upgrade_plugin_savepoint(true, 2026110700, 'quizaccess', 'examproctor');
+    }
+
+    if ($oldversion < 2026111200) {
+        // 1.3.0: index for the every-minute auto-submit task; the exact consent text per attempt.
+        $table = new xmldb_table('quizaccess_examproctor_log');
+        $index = new xmldb_index('type_time', XMLDB_INDEX_NOTUNIQUE, ['eventtype', 'timecreated']);
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        $table = new xmldb_table('quizaccess_examproctor_consent');
+        if (!$dbman->table_exists($table)) {
+            $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE);
+            $table->add_field('quizid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+            $table->add_field('attemptid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+            $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+            $table->add_field('version', XMLDB_TYPE_CHAR, '20', null, XMLDB_NOTNULL);
+            $table->add_field('texthash', XMLDB_TYPE_CHAR, '64', null, XMLDB_NOTNULL);
+            $table->add_field('notice', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL);
+            $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+            $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+            $table->add_key('quizid', XMLDB_KEY_FOREIGN, ['quizid'], 'quiz', ['id']);
+            $table->add_key('attemptid', XMLDB_KEY_FOREIGN_UNIQUE, ['attemptid'], 'quiz_attempts', ['id']);
+            $table->add_key('userid', XMLDB_KEY_FOREIGN, ['userid'], 'user', ['id']);
+            $dbman->create_table($table);
+        }
+        upgrade_plugin_savepoint(true, 2026111200, 'quizaccess', 'examproctor');
     }
 
     return true;

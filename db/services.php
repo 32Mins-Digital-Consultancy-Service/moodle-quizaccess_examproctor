@@ -23,5 +23,7 @@ $functions = [
         'type' => 'write',
         'ajax' => true,
         'loginrequired' => true,
+        // Writes only to the database, never to the session: do not block the quiz's own requests.
+        'readonlysession' => true,
     ],
 ];

@@ -26,7 +26,7 @@
  * @copyright  2026 32Mins
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-define(['core/ajax'], function(Ajax) {
+define(['core/ajax', 'core_form/changechecker'], function(Ajax, ChangeChecker) {
     'use strict';
 
     var SNAPSHOT_WIDTH = 320;
@@ -145,13 +145,19 @@ define(['core/ajax'], function(Ajax) {
         sendEvent(type, details, imagedata);
     };
 
-    var markFormSubmitted = function() {
+    /**
+     * Stop Moodle's "Leave page? Changes may not be saved" prompt from blocking an automatic submit or redirect.
+     *
+     * @param {HTMLFormElement|null} form
+     */
+    var markFormSubmitted = function(form) {
         try {
-            if (window.M && window.M.core_formchangechecker) {
-                window.M.core_formchangechecker.set_form_submitted();
+            if (form) {
+                ChangeChecker.markFormSubmitted(form);
             }
+            ChangeChecker.disableAllChecks();
         } catch (e) {
-            // Only used to suppress the "leave page?" prompt.
+            // Older pages without the module: nothing to suppress.
         }
     };
 
@@ -171,7 +177,7 @@ define(['core/ajax'], function(Ajax) {
             input.name = 'finishattempt';
             input.value = '1';
             form.appendChild(input);
-            markFormSubmitted();
+            markFormSubmitted(form);
             form.submit();
         } else {
             sendEvent('autosubmit_now', '');
@@ -184,7 +190,7 @@ define(['core/ajax'], function(Ajax) {
         }
         if (result.autosubmitted && result.redirecturl) {
             showOverlay(strings.autosubmit, null);
-            markFormSubmitted();
+            markFormSubmitted(document.getElementById('responseform'));
             window.location.href = result.redirecturl;
             return;
         }
@@ -213,8 +219,8 @@ define(['core/ajax'], function(Ajax) {
         if (!banner) {
             banner = document.createElement('div');
             banner.setAttribute('role', 'alert');
-            banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:100001;padding:12px 16px;' +
-                'background:#b02a37;color:#fff;text-align:center;font-weight:600;pointer-events:none;';
+            banner.className = 'alert alert-danger fw-bold text-center mb-0 rounded-0';
+            banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:100001;pointer-events:none;';
             document.body.appendChild(banner);
         }
         banner.textContent = message;
@@ -247,8 +253,9 @@ define(['core/ajax'], function(Ajax) {
     var buildBadge = function() {
         badgeEl = document.createElement('div');
         badgeEl.setAttribute('aria-hidden', 'true');
-        badgeEl.style.cssText = 'position:fixed;left:12px;bottom:12px;z-index:100000;padding:4px 10px;' +
-            'background:#0f6cbf;color:#fff;font-size:12px;border-radius:12px;pointer-events:none;max-width:70vw;';
+        badgeEl.className = 'badge badge-primary bg-primary text-wrap text-start';
+        badgeEl.style.cssText = 'position:fixed;left:12px;bottom:12px;z-index:100000;font-size:12px;pointer-events:none;' +
+            'max-width:70vw;';
         document.body.appendChild(badgeEl);
         updateBadge();
     };
@@ -457,8 +464,15 @@ define(['core/ajax'], function(Ajax) {
         video.muted = true;
         video.setAttribute('playsinline', '');
         video.setAttribute('aria-hidden', 'true');
-        video.style.cssText = 'position:fixed;right:12px;bottom:12px;width:160px;height:120px;z-index:100000;' +
-            'border:2px solid #0f6cbf;border-radius:6px;background:#000;object-fit:cover;';
+        // Bottom-left, above the status badge, away from the quiz's own buttons; a click shrinks or restores it.
+        video.title = strings.selfview_toggle || '';
+        video.style.cssText = 'position:fixed;left:12px;bottom:44px;width:160px;height:120px;z-index:100000;' +
+            'border:2px solid var(--bs-primary, #0f6cbf);border-radius:6px;background:#000;object-fit:cover;cursor:pointer;';
+        video.addEventListener('click', function() {
+            var small = video.style.width === '64px';
+            video.style.width = small ? '160px' : '64px';
+            video.style.height = small ? '120px' : '48px';
+        });
         document.body.appendChild(video);
         canvas = document.createElement('canvas');
         canvas.width = SNAPSHOT_WIDTH;

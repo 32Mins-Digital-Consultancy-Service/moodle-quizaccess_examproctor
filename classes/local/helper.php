@@ -160,6 +160,8 @@ class helper {
         }
         $count = $DB->count_records_select('quizaccess_examproctor_log', $where, $params);
         $DB->delete_records_select('quizaccess_examproctor_log', $where, $params);
+        // The consent record shares the quizid / attemptid / timecreated columns, so the same condition applies.
+        $DB->delete_records_select('quizaccess_examproctor_consent', $where, $params);
         return $count;
     }
 }
