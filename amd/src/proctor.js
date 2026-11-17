@@ -94,6 +94,7 @@ define(['core/ajax', 'core_form/changechecker'], function(Ajax, ChangeChecker) {
 
     var hiddenAt = 0;
     var fullscreenWaived = false;  // The browser refused fullscreen: the quiz continues and the report shows it.
+    var fullscreenRefused = false; // Strict quizzes: the browser refused, the paper stays hidden.
     var blurAt = 0;
 
     // Small per-attempt memory in this tab, so a page reload does not start from scratch.
@@ -330,7 +331,7 @@ define(['core/ajax', 'core_form/changechecker'], function(Ajax, ChangeChecker) {
         } else if (extra) {
             showOverlay(extra.text, extra.button || null);
         } else if (blockers.fullscreen) {
-            showOverlay(strings.fullscreenrequired, strings.fullscreenbutton);
+            showOverlay(fullscreenRefused ? strings.fullscreen_refused : strings.fullscreenrequired, strings.fullscreenbutton);
         } else if (blockers.problem) {
             // No button: clears by itself once the problem is fixed.
             showOverlay(strings['ovl_' + blockers.problem] || strings.warn_generic, null);
@@ -359,6 +360,16 @@ define(['core/ajax', 'core_form/changechecker'], function(Ajax, ChangeChecker) {
      */
     var waiveFullscreen = function(reason) {
         if (fullscreenWaived || document.fullscreenElement) {
+            return;
+        }
+        if (cfg.fullscreenstrict) {
+            // This quiz keeps the paper hidden: record the refusal once and ask the learner to allow fullscreen.
+            if (!store.get('fsrefused')) {
+                store.set('fsrefused', '1');
+                sendEvent('fullscreen_unsupported', 'refused (paper kept hidden): ' + reason);
+            }
+            fullscreenRefused = true;
+            refreshOverlay();
             return;
         }
         fullscreenWaived = true;
@@ -701,12 +712,17 @@ define(['core/ajax', 'core_form/changechecker'], function(Ajax, ChangeChecker) {
                     store.set('fsunsupported', '1');
                     sendEvent('fullscreen_unsupported', (navigator.userAgent || '').substring(0, 200));
                 }
+                if (cfg.fullscreenstrict) {
+                    blockers.fullscreen = true;
+                    fullscreenRefused = true;
+                }
             } else {
                 fullscreenWaived = store.get('fswaived') === '1';
                 blockers.fullscreen = !document.fullscreenElement && !fullscreenWaived;
                 document.addEventListener('fullscreenchange', function() {
                     if (document.fullscreenElement) {
                         blockers.fullscreen = false;
+                        fullscreenRefused = false;
                     } else if (!fullscreenWaived) {
                         blockers.fullscreen = true;
                         if (!focusSuspended() && !submitting) {

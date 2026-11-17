@@ -33,6 +33,8 @@ require_once($CFG->dirroot . '/mod/quiz/locallib.php');
  * @covers     \quizaccess_examproctor\external\log_event
  * @covers     \quizaccess_examproctor\task\enforce_autosubmit
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\quizaccess_examproctor\external\log_event::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\quizaccess_examproctor\task\enforce_autosubmit::class)]
 final class log_event_test extends \advanced_testcase {
 
     /**

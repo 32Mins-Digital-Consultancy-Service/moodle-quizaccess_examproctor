@@ -1,5 +1,14 @@
 # Changes
 
+## 1.3.1 (2026-11-14)
+
+- New per-quiz choice "If the browser refuses fullscreen": continue and flag it (default), or keep the paper hidden
+  until fullscreen works (for computers you control, such as a lab).
+- Deleting an attempt's evidence keeps the consent record until the normal retention period, as proof that the
+  learner agreed; retention and privacy deletion still remove it.
+- "Learner" instead of "student" in the plugin's own text.
+- Tested on PHP 8.4 and MariaDB in addition to PostgreSQL.
+
 ## 1.3.0 (2026-11-12)
 
 - Moodle 5.3 LTS: tested on 5.3.1 and 4.5; continuous integration covers 4.5 and 5.3 with PostgreSQL and MariaDB.

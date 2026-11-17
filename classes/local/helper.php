@@ -149,9 +149,11 @@ class helper {
      * @param \context $context module context
      * @param string $where SQL condition on quizaccess_examproctor_log
      * @param array $params
+     * @param bool $withconsent also delete consent records (retention); a teacher's evidence delete keeps them, as
+     *     consent is the proof that the learner agreed
      * @return int rows deleted
      */
-    public static function delete_logs(\context $context, string $where, array $params): int {
+    public static function delete_logs(\context $context, string $where, array $params, bool $withconsent = false): int {
         global $DB;
         $fs = get_file_storage();
         $ids = $DB->get_fieldset_select('quizaccess_examproctor_log', 'id', $where . ' AND hassnapshot = 1', $params);
@@ -160,8 +162,10 @@ class helper {
         }
         $count = $DB->count_records_select('quizaccess_examproctor_log', $where, $params);
         $DB->delete_records_select('quizaccess_examproctor_log', $where, $params);
-        // The consent record shares the quizid / attemptid / timecreated columns, so the same condition applies.
-        $DB->delete_records_select('quizaccess_examproctor_consent', $where, $params);
+        if ($withconsent) {
+            // The consent record shares the quizid / attemptid / timecreated columns, so the same condition applies.
+            $DB->delete_records_select('quizaccess_examproctor_consent', $where, $params);
+        }
         return $count;
     }
 }

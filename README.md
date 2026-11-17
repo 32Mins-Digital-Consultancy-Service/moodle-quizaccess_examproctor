@@ -1,4 +1,4 @@
-# Exam proctoring (quizaccess_examproctor) 1.3.0
+# Exam proctoring (quizaccess_examproctor) 1.3.1
 
 Browser-based proctoring for Moodle quizzes: consent, webcam, focus, fullscreen and clipboard checks, and a
 report for teachers. Moodle 4.5 LTS to 5.3 LTS.
@@ -11,10 +11,10 @@ report for teachers. Moodle 4.5 LTS to 5.3 LTS.
 - Stopped, refused, covered or frozen camera blocks the quiz until fixed (covered counts as a violation; the others
   are flagged for review)
 - Tab switching and window focus loss, recorded with the time away
-- Fullscreen enforcement (if the browser refuses fullscreen, the quiz continues and the teacher sees a flag)
+- Fullscreen enforcement; per quiz, if the browser refuses fullscreen: continue and flag it, or keep the paper hidden
 - Copy, paste and right-click blocking
 - Optional auto-submit after N violations: off for the whole site until an administrator allows it
-- Heartbeat every minute, so quiet students are not reported as silent
+- Heartbeat every minute, so quiet learners are not reported as silent
 - "Learners may be under 18" mode: no camera, browser events only
 - Report: every attempt (no-data attempts first), live status, a one-line summary, snapshots received vs expected,
   multiple-session flag, sort and filters, paging, timeline with images, CSV / Excel export
@@ -24,7 +24,7 @@ report for teachers. Moodle 4.5 LTS to 5.3 LTS.
 
 ## Requirements
 
-Moodle 4.5 LTS to 5.3 LTS, HTTPS, cron every minute. Students: a computer with a webcam and current Chrome, Edge or
+Moodle 4.5 LTS to 5.3 LTS, HTTPS, cron every minute. Learners: a computer with a webcam and current Chrome, Edge or
 Firefox.
 
 ## Install
@@ -54,7 +54,7 @@ consent record, snapshots, flags and the report. This combination has not yet be
 ## Limits of browser proctoring
 
 Switching tabs or a second device can be detected and recorded, not prevented, without Safe Exam Browser. Webcam
-images are personal data: inform students, keep the retention period short and check local law (GDPR, DPDP Act).
+images are personal data: inform learners, keep the retention period short and check local law (GDPR, DPDP Act).
 
 ## Development
 

@@ -31,12 +31,12 @@ $string['examproctor:viewreport'] = 'View the exam proctoring report and webcam 
 $string['examproctor:deleteevidence'] = 'Delete the proctoring evidence of an attempt';
 
 // Privacy.
-$string['privacy:metadata:log'] = 'Events recorded while a student takes a proctored quiz.';
-$string['privacy:metadata:log:userid'] = 'The student taking the quiz.';
+$string['privacy:metadata:log'] = 'Events recorded while a learner takes a proctored quiz.';
+$string['privacy:metadata:log:userid'] = 'The learner taking the quiz.';
 $string['privacy:metadata:log:quizid'] = 'The quiz.';
 $string['privacy:metadata:log:attemptid'] = 'The quiz attempt the event belongs to.';
 $string['privacy:metadata:log:eventtype'] = 'The kind of event, for example tab switch or webcam snapshot.';
-$string['privacy:metadata:log:details'] = 'Extra details about the event, for example how long the student was away.';
+$string['privacy:metadata:log:details'] = 'Extra details about the event, for example how long the learner was away.';
 $string['privacy:metadata:log:isviolation'] = 'Whether the event counts as a violation.';
 $string['privacy:metadata:log:hassnapshot'] = 'Whether a webcam image is stored with the event.';
 $string['privacy:metadata:log:timecreated'] = 'When the event happened.';
@@ -45,15 +45,15 @@ $string['privacy:metadata:session'] = 'The time and version of the consent notic
 
 // Quiz settings form.
 $string['enabled'] = 'Enable exam proctoring';
-$string['enabled_help'] = 'When enabled, students must consent before each attempt, the quiz must be taken in a web browser (not the mobile app), and their browser activity (and, if set, webcam snapshots) is recorded during the attempt. Teacher previews are not proctored.';
+$string['enabled_help'] = 'When enabled, learners must consent before each attempt, the quiz must be taken in a web browser (not the mobile app), and their browser activity (and, if set, webcam snapshots) is recorded during the attempt. Teacher previews are not proctored.';
 $string['minors'] = 'Learners may be under 18';
-$string['minors_help'] = 'Use this for school students or any group that may include minors. The webcam is never used: only tab switching, window focus, fullscreen and copy/paste events are recorded, and the consent notice says so.';
+$string['minors_help'] = 'Use this for school pupils or any group that may include minors. The webcam is never used: only tab switching, window focus, fullscreen and copy/paste events are recorded, and the consent notice says so.';
 $string['requirecamera'] = 'Require webcam';
-$string['requirecamera_help'] = 'Students must allow webcam access for the whole attempt. Snapshots are saved for the proctoring report. A stopped, covered, black or frozen camera blocks the quiz until it is fixed and is recorded as a violation. Browsers require HTTPS for webcam access.';
+$string['requirecamera_help'] = 'Learners must allow webcam access for the whole attempt. Snapshots are saved for the proctoring report. A stopped, covered, black or frozen camera blocks the quiz until it is fixed and is recorded as a violation. Browsers require HTTPS for webcam access.';
 $string['snapshotinterval'] = 'Snapshot interval';
 $string['snapshotinterval_help'] = 'How often a webcam snapshot is saved. 60 seconds is recommended for large exams: shorter intervals multiply the load on the server.';
 $string['requirefullscreen'] = 'Require fullscreen';
-$string['requirefullscreen_help'] = 'The quiz page is hidden until the student enters fullscreen. Browsers always leave fullscreen when a page reloads, so set Layout > New page to "Never, all questions on one page" for proctored quizzes.';
+$string['requirefullscreen_help'] = 'The quiz page is hidden until the learner enters fullscreen. Browsers always leave fullscreen when a page reloads, so set Layout > New page to "Never, all questions on one page" for proctored quizzes.';
 $string['blockclipboard'] = 'Block copy, paste and right-click';
 $string['maxviolations'] = 'Violations before auto-submit';
 $string['maxviolations_help'] = 'The attempt is submitted automatically once this many violations are recorded. The page is saved first, so answers typed on it are kept; if the browser does not submit it, the server does within about a minute. A problem that lasts (for example a frozen camera) counts once, not every time it is recorded again. Set to 0 to never auto-submit.';
@@ -108,7 +108,7 @@ $string['js_preview_note'] = '(Preview: not recorded)';
 $string['settings_retention'] = 'Keep proctoring data for (days)';
 $string['settings_retention_desc'] = 'Site default: events and webcam images are deleted this many days after they were recorded. A quiz can set its own period. 0 = keep until the quiz is deleted (not recommended under GDPR / DPDP).';
 $string['settings_proctorpreviews'] = 'Apply proctoring to teacher previews (testing)';
-$string['settings_proctorpreviews_desc'] = 'When ticked, the browser-side checks also run when a teacher or admin previews a quiz, so you can test without a student account. Previews are never recorded, never count violations and are never auto-submitted.';
+$string['settings_proctorpreviews_desc'] = 'When ticked, the browser-side checks also run when a teacher or admin previews a quiz, so you can test without a learner account. Previews are never recorded, never count violations and are never auto-submitted.';
 $string['task_cleanup'] = 'Delete expired proctoring events and images';
 
 // Moodle events.
@@ -124,7 +124,7 @@ $string['retentionnotice'] = 'Events and images are deleted automatically {$a} d
 $string['retentionkeep'] = 'Events and images are kept until the quiz is deleted.';
 $string['noevents'] = 'No proctoring events for this attempt.';
 $string['noattempts'] = 'No attempts match.';
-$string['user'] = 'Student';
+$string['user'] = 'Learner';
 $string['attempt'] = 'Attempt';
 $string['state'] = 'State';
 $string['violations'] = 'Violations';
@@ -143,7 +143,7 @@ $string['flag_gap'] = 'Missing snapshots';
 $string['flag_multisession'] = 'Several browser sessions';
 $string['flag_other'] = '{$a} warning(s)';
 $string['flagshelp'] = '"No proctoring data": the browser never ran the proctoring script (blocked or disabled) - treat as unproctored. "Missing snapshots": fewer webcam snapshots arrived than the attempt length requires. "Several browser sessions": the attempt was opened in more than one tab, browser or device. Attempts with no data are listed first.';
-$string['searchstudent'] = 'Student name or e-mail';
+$string['searchstudent'] = 'Learner name or e-mail';
 $string['flaggedonly'] = 'Only attempts that need a look';
 $string['downloadsummary'] = 'Attempts ({$a})';
 $string['downloadevents'] = 'All events ({$a})';
@@ -195,8 +195,8 @@ $string['event_problem_continues'] = 'Problem still going on';
 $string['js_fullscreen_waived'] = 'Fullscreen is not available in this browser. You can continue the quiz; your teacher will see this in the report.';
 
 // 1.3.0.
-$string['privacy:metadata:consent'] = 'The exact consent notice a student agreed to before a proctored attempt.';
-$string['privacy:metadata:consent:userid'] = 'The student who consented.';
+$string['privacy:metadata:consent'] = 'The exact consent notice a learner agreed to before a proctored attempt.';
+$string['privacy:metadata:consent:userid'] = 'The learner who consented.';
 $string['privacy:metadata:consent:attemptid'] = 'The attempt the consent was given for.';
 $string['privacy:metadata:consent:version'] = 'The version of the notice.';
 $string['privacy:metadata:consent:notice'] = 'The lines of the notice as shown.';
@@ -211,8 +211,15 @@ $string['eventevidence_viewed'] = 'Proctoring evidence viewed';
 $string['sortby'] = 'Sort';
 $string['sort_needs'] = 'Needs a look first';
 $string['sort_violations'] = 'Most violations first';
-$string['sort_name'] = 'Student name';
+$string['sort_name'] = 'Learner name';
 $string['sort_recent'] = 'Most recent first';
 $string['integrity'] = 'Summary';
 $string['integrity_line'] = '{$a->violations} violation(s) · {$a->flags} flag(s) · {$a->missing} missing snapshot(s) · {$a->sessions} session(s)';
 $string['js_selfview_toggle'] = 'Your camera. Click to make it smaller or larger.';
+
+// 1.3.1.
+$string['fullscreenstrict'] = 'If the browser refuses fullscreen';
+$string['fullscreenstrict_help'] = 'Some browsers, kiosk modes or site settings refuse fullscreen. "Continue and flag": the quiz continues and the report flags "Fullscreen not available" (no learner is locked out). "Keep the paper hidden": the quiz stays hidden until fullscreen works; use this only where you control the computers (for example a lab), because a learner whose browser cannot go fullscreen cannot continue.';
+$string['fullscreenstrict_continue'] = 'Continue and flag it for review';
+$string['fullscreenstrict_block'] = 'Keep the paper hidden until fullscreen works';
+$string['js_fullscreen_refused'] = 'This exam must be taken in fullscreen, but your browser refused it. Allow fullscreen for this site in the browser settings and press the button again, or ask your teacher for help.';

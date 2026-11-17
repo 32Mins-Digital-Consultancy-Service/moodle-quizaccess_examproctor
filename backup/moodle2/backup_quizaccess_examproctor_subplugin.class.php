@@ -38,7 +38,7 @@ class backup_quizaccess_examproctor_subplugin extends backup_mod_quiz_access_sub
         $subplugin = $this->get_subplugin_element();
         $wrapper = new backup_nested_element($this->get_recommended_name());
         $settings = new backup_nested_element('quizaccess_examproctor', null, ['enabled', 'minors', 'requirecamera',
-            'snapshotinterval', 'requirefullscreen', 'blockclipboard', 'maxviolations', 'retentiondays']);
+            'snapshotinterval', 'requirefullscreen', 'fullscreenstrict', 'blockclipboard', 'maxviolations', 'retentiondays']);
 
         $subplugin->add_child($wrapper);
         $wrapper->add_child($settings);

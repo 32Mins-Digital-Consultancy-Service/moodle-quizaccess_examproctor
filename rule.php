@@ -45,8 +45,8 @@ class quizaccess_examproctor extends access_rule_base {
     protected $settings;
 
     /** Fields of the core settings table edited in the quiz form. */
-    const FORM_FIELDS = ['minors', 'requirecamera', 'snapshotinterval', 'requirefullscreen', 'blockclipboard',
-        'maxviolations', 'retentiondays'];
+    const FORM_FIELDS = ['minors', 'requirecamera', 'snapshotinterval', 'requirefullscreen', 'fullscreenstrict',
+        'blockclipboard', 'maxviolations', 'retentiondays'];
 
     /**
      * Constructor.
@@ -332,7 +332,7 @@ class quizaccess_examproctor extends access_rule_base {
         $strings = [];
         foreach (['camerarequired', 'camerabutton', 'fullscreenrequired', 'fullscreenbutton', 'autosubmit',
                 'warn_generic', 'active', 'active_preview', 'preview_note', 'ovl_camera_covered', 'ovl_video_frozen',
-                'dialoglabel', 'analysis_disabled_note', 'fullscreen_waived', 'selfview_toggle'] as $key) {
+                'dialoglabel', 'analysis_disabled_note', 'fullscreen_waived', 'selfview_toggle', 'fullscreen_refused'] as $key) {
             $strings[$key] = get_string('js_' . $key, $p);
         }
         foreach (['tab_hidden', 'window_blur', 'fullscreen_exit', 'copy', 'paste', 'contextmenu', 'camera_lost',
@@ -356,6 +356,7 @@ class quizaccess_examproctor extends access_rule_base {
             'requirecamera' => $camera,
             'snapshotinterval' => helper::interval($this->settings),
             'requirefullscreen' => (bool) $this->settings->requirefullscreen && $mode === 'attempt',
+            'fullscreenstrict' => !empty($this->settings->fullscreenstrict),
             'blockclipboard' => (bool) $this->settings->blockclipboard,
             'extensions' => $extensions,
             'strings' => $strings,
@@ -402,6 +403,14 @@ class quizaccess_examproctor extends access_rule_base {
         $mform->addElement('selectyesno', 'examproctor_requirefullscreen', get_string('requirefullscreen', $p));
         $mform->addHelpButton('examproctor_requirefullscreen', 'requirefullscreen', $p);
         $mform->setDefault('examproctor_requirefullscreen', 1);
+
+        $mform->addElement('select', 'examproctor_fullscreenstrict', get_string('fullscreenstrict', $p), [
+            0 => get_string('fullscreenstrict_continue', $p),
+            1 => get_string('fullscreenstrict_block', $p),
+        ]);
+        $mform->addHelpButton('examproctor_fullscreenstrict', 'fullscreenstrict', $p);
+        $mform->setDefault('examproctor_fullscreenstrict', 0);
+        $mform->disabledIf('examproctor_fullscreenstrict', 'examproctor_requirefullscreen', 'eq', 0);
 
         $mform->addElement('selectyesno', 'examproctor_blockclipboard', get_string('blockclipboard', $p));
         $mform->setDefault('examproctor_blockclipboard', 1);
@@ -481,6 +490,7 @@ class quizaccess_examproctor extends access_rule_base {
                 'requirecamera' => empty($quiz->examproctor_requirecamera) ? 0 : 1,
                 'snapshotinterval' => max(30, (int) ($quiz->examproctor_snapshotinterval ?? 60)),
                 'requirefullscreen' => empty($quiz->examproctor_requirefullscreen) ? 0 : 1,
+                'fullscreenstrict' => empty($quiz->examproctor_fullscreenstrict) ? 0 : 1,
                 'blockclipboard' => empty($quiz->examproctor_blockclipboard) ? 0 : 1,
                 'maxviolations' => helper::autosubmit_allowed() ? max(0, (int) ($quiz->examproctor_maxviolations ?? 0))
                     : (int) ($existing->maxviolations ?? 0),

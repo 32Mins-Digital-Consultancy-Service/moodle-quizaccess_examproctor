@@ -201,5 +201,15 @@ function xmldb_quizaccess_examproctor_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026111200, 'quizaccess', 'examproctor');
     }
 
+    if ($oldversion < 2026111400) {
+        // 1.3.1: per-quiz choice when the browser refuses fullscreen.
+        $table = new xmldb_table('quizaccess_examproctor');
+        $field = new xmldb_field('fullscreenstrict', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'requirefullscreen');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_plugin_savepoint(true, 2026111400, 'quizaccess', 'examproctor');
+    }
+
     return true;
 }

@@ -62,7 +62,7 @@ class cleanup_evidence extends \core\task\scheduled_task {
             }
             $context = \context_module::instance($cm->id);
             $total += helper::delete_logs($context, 'quizid = :quizid AND timecreated < :cutoff',
-                ['quizid' => $quizid, 'cutoff' => $cutoff]);
+                ['quizid' => $quizid, 'cutoff' => $cutoff], true);
         }
         if ($total) {
             mtrace('Deleted ' . $total . ' expired proctoring event(s) and their images.');
