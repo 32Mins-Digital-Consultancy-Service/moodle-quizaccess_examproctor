@@ -1,5 +1,9 @@
 # Changes
 
+## 1.3.2 (2026-11-17)
+
+- Consent notice version 2026-11-14 (the notice wording changed in 1.3.1/1.3.2).
+
 ## 1.3.1 (2026-11-14)
 
 - New per-quiz choice "If the browser refuses fullscreen": continue and flag it (default), or keep the paper hidden

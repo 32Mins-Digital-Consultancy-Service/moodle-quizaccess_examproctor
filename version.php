@@ -25,8 +25,8 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'quizaccess_examproctor';
-$plugin->version   = 2026111400;
+$plugin->version   = 2026111700;
 $plugin->requires  = 2024100700; // Moodle 4.5 LTS.
 $plugin->supported = [405, 503];
 $plugin->maturity  = MATURITY_RC;
-$plugin->release   = '1.3.1';
+$plugin->release   = '1.3.2';

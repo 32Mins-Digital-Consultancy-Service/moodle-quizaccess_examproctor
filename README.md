@@ -1,4 +1,4 @@
-# Exam proctoring (quizaccess_examproctor) 1.3.1
+# Exam proctoring (quizaccess_examproctor) 1.3.2
 
 Browser-based proctoring for Moodle quizzes: consent, webcam, focus, fullscreen and clipboard checks, and a
 report for teachers. Moodle 4.5 LTS to 5.3 LTS.

@@ -26,7 +26,7 @@ namespace quizaccess_examproctor\local;
 class helper {
 
     /** Version of the consent notice; bump whenever the consent wording changes. */
-    const CONSENT_VERSION = '2026-11-07';
+    const CONSENT_VERSION = '2026-11-14';
 
     /** Snapshots may lag by this many intervals before the attempt is flagged. */
     const GAP_INTERVALS = 2;
