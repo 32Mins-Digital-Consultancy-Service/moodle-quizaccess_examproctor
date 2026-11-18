@@ -60,3 +60,9 @@ images are personal data: inform learners, keep the retention period short and c
 
 `amd/build` is minified with terser; run `npx grunt amd` in a Moodle checkout before a release. Re-runnable check
 scripts live in the git repository under `dev/` (not in the release ZIP).
+
+## Licence
+
+GNU General Public License v3 or later (see COPYING.txt), like Moodle itself. You may use, study, change and share
+this plugin; if you distribute a changed version, it must also be GPL v3 or later with its source code available.
+Copyright 2026 32Mins.
