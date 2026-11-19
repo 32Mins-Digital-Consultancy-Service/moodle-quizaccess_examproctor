@@ -31,23 +31,23 @@ define(['core/ajax', 'core_form/changechecker'], function(Ajax, ChangeChecker) {
 
     var SNAPSHOT_WIDTH = 320;
     var SNAPSHOT_HEIGHT = 240;
-    var THROTTLE_MS = 3000;       // Same event type at most this often.
-    var TICK_MS = 500;            // Camera analysis cadence.
-    var REPEAT_MS = 15000;        // While a problem continues, record it again this often.
-    var GRACE_MS = 3000;          // A problem must last this long before it blocks and is recorded.
-    var CAMERA_GRACE_MS = 2500;   // Don't flash the camera screen while a remembered permission starts the camera.
-    var SLOW_PASS_MS = 800;       // An analysis pass slower than this counts as slow...
-    var SLOW_PASSES = 3;          // ...and this many in a row switch the extra analysers off.
-    var DARK_LEVEL = 12;          // Mean brightness (0-255) below which the camera counts as covered.
-    var FLAT_LEVEL = 8;           // Brightness spread below which the picture is a flat field (hand over the lens).
-    var SAMPLE_W = 64;            // Tiny grayscale copy used for covered / frozen / motion maths.
+    var THROTTLE_MS = 3000; // Same event type at most this often.
+    var TICK_MS = 500; // Camera analysis cadence.
+    var REPEAT_MS = 15000; // While a problem continues, record it again this often.
+    var GRACE_MS = 3000; // A problem must last this long before it blocks and is recorded.
+    var CAMERA_GRACE_MS = 2500; // Don't flash the camera screen while a remembered permission starts the camera.
+    var SLOW_PASS_MS = 800; // An analysis pass slower than this counts as slow...
+    var SLOW_PASSES = 3; // ...and this many in a row switch the extra analysers off.
+    var DARK_LEVEL = 12; // Mean brightness (0-255) below which the camera counts as covered.
+    var FLAT_LEVEL = 8; // Brightness spread below which the picture is a flat field (hand over the lens).
+    var SAMPLE_W = 64; // Tiny grayscale copy used for covered / frozen / motion maths.
     var SAMPLE_H = 48;
-    var MAX_GAP_MS = 4000;        // Frames further apart than this are not compared.
-    var NOISE_DELTA = 0.5;        // Any pixel change above this means the feed is alive.
+    var MAX_GAP_MS = 4000; // Frames further apart than this are not compared.
+    var NOISE_DELTA = 0.5; // Any pixel change above this means the feed is alive.
     var FROZEN_IDENTICAL_MS = 15000;
     var FROZEN_STALL_MS = 5000;
-    var WARMUP_MS = 5000;         // Ignore covered / frozen while the camera adjusts after starting.
-    var HEARTBEAT_MS = 60000;     // "Still here" signal, so a quiet student never looks silent in the report.
+    var WARMUP_MS = 5000; // Ignore covered / frozen while the camera adjusts after starting.
+    var HEARTBEAT_MS = 60000; // "Still here" signal, so a quiet student never looks silent in the report.
     var VIOLATION_TYPES = ['camera_denied', 'camera_lost', 'camera_covered', 'video_frozen', 'tab_hidden',
         'window_blur', 'fullscreen_exit', 'copy', 'paste', 'contextmenu'];
 
@@ -72,7 +72,7 @@ define(['core/ajax', 'core_form/changechecker'], function(Ajax, ChangeChecker) {
     var badgeEl = null;
 
     var blockers = {camera: false, fullscreen: false, problem: null};
-    var extraBlockers = [];        // [{name, text, button, onClick}] in the order they were added.
+    var extraBlockers = []; // [{name, text, button, onClick}] in the order they were added.
     var focusSuspendedUntil = 0;
     var lastSent = {};
     var submitting = false;
@@ -93,7 +93,7 @@ define(['core/ajax', 'core_form/changechecker'], function(Ajax, ChangeChecker) {
     var videoTimeSince = 0;
 
     var hiddenAt = 0;
-    var fullscreenWaived = false;  // The browser refused fullscreen: the quiz continues and the report shows it.
+    var fullscreenWaived = false; // The browser refused fullscreen: the quiz continues and the report shows it.
     var fullscreenRefused = false; // Strict quizzes: the browser refused, the paper stays hidden.
     var blurAt = 0;
 
@@ -238,8 +238,12 @@ define(['core/ajax', 'core_form/changechecker'], function(Ajax, ChangeChecker) {
         }
         var text = cfg.preview ? strings.active_preview : strings.active;
         if (cfg.preview || debugMode) {
+            var camerastate = 'not used';
+            if (cfg.requirecamera) {
+                camerastate = cameraActive ? 'on' : 'off';
+            }
             text += ' | v' + (cfg.release || '?') + ' | ' + cfg.mode +
-                ' | camera: ' + (cfg.requirecamera ? (cameraActive ? 'on' : 'off') : 'not used') +
+                ' | camera: ' + camerastate +
                 ' | analysers: ' + (analysersOff ? 'OFF (too slow)' : analysers.map(function(a) {
                     return a.name;
                 }).join(',') || 'none') +
@@ -445,6 +449,7 @@ define(['core/ajax', 'core_form/changechecker'], function(Ajax, ChangeChecker) {
                     takeSnapshot();
                 }
             }, 3000);
+            return mediaStream;
         }).catch(function(error) {
             cameraActive = false;
             blockers.camera = true;
