@@ -80,15 +80,23 @@ if ($delete) {
             'context' => $context,
             'other' => ['quizid' => (int) $cm->instance],
         ])->trigger();
-        redirect(new moodle_url('/mod/quiz/accessrule/examproctor/report.php', ['cmid' => $cmid]),
-            get_string('evidencedeleted', $p), null, \core\output\notification::NOTIFY_SUCCESS);
+        redirect(
+            new moodle_url('/mod/quiz/accessrule/examproctor/report.php', ['cmid' => $cmid]),
+            get_string('evidencedeleted', $p),
+            null,
+            \core\output\notification::NOTIFY_SUCCESS
+        );
     }
     echo $OUTPUT->header();
     $names = helper::names([$attempt->userid]);
-    echo $OUTPUT->confirm(get_string('deleteevidenceconfirm', $p, $names[$attempt->userid] ?? $attempt->userid),
-        new moodle_url('/mod/quiz/accessrule/examproctor/report.php',
-            ['cmid' => $cmid, 'delete' => $delete, 'confirm' => 1, 'sesskey' => sesskey()]),
-        $backurl);
+    echo $OUTPUT->confirm(
+        get_string('deleteevidenceconfirm', $p, $names[$attempt->userid] ?? $attempt->userid),
+        new moodle_url(
+            '/mod/quiz/accessrule/examproctor/report.php',
+            ['cmid' => $cmid, 'delete' => $delete, 'confirm' => 1, 'sesskey' => sesskey()]
+        ),
+        $backurl
+    );
     echo $OUTPUT->footer();
     die;
 }
@@ -111,7 +119,7 @@ if (in_array($download, ['csv', 'excel', 'ods', 'json'], true)) {
             'attempt' => get_string('attempt', $p), 'time' => get_string('time', $p), 'event' => get_string('event', $p),
             'violation' => get_string('violation', $p), 'details' => get_string('details', $p),
             'image' => get_string('snapshot', $p)];
-        \core\dataformat::download_data($filename, $download, $columns, $rs, function($log) use (&$names) {
+        \core\dataformat::download_data($filename, $download, $columns, $rs, function ($log) use (&$names) {
             if (!isset($names[$log->userid])) {
                 $names += helper::names([$log->userid]);
             }
@@ -135,7 +143,7 @@ if (in_array($download, ['csv', 'excel', 'ods', 'json'], true)) {
             'state' => get_string('state', $p), 'violations' => get_string('violations', $p),
             'snapshots' => get_string('snapshots', $p), 'expected' => get_string('expectedsnapshots', $p),
             'sessions' => get_string('sessions', $p), 'flags' => get_string('flags', $p)];
-        \core\dataformat::download_data($filename, $download, $columns, $rows, function($row) use ($names, $settings, $p) {
+        \core\dataformat::download_data($filename, $download, $columns, $rows, function ($row) use ($names, $settings, $p) {
             $a = report_data::assess($row, $settings);
             $flags = [];
             if ($a->nodata) {
@@ -169,8 +177,11 @@ if (empty($settings->enabled)) {
     echo $OUTPUT->notification(get_string('notenabled', $p), 'info');
 }
 $days = helper::retention_days($settings);
-echo html_writer::tag('p', $days ? get_string('retentionnotice', $p, $days) : get_string('retentionkeep', $p),
-    ['class' => 'text-muted small']);
+echo html_writer::tag(
+    'p',
+    $days ? get_string('retentionnotice', $p, $days) : get_string('retentionkeep', $p),
+    ['class' => 'text-muted small']
+);
 
 if ($attemptid) {
     // Detail view: one attempt's timeline.
@@ -185,18 +196,28 @@ if ($attemptid) {
         ])->trigger();
     }
 
-    echo html_writer::tag('p', html_writer::link(new moodle_url('/mod/quiz/accessrule/examproctor/report.php',
-        ['cmid' => $cmid]), get_string('backtosummary', $p)));
+    echo html_writer::tag('p', html_writer::link(new moodle_url(
+        '/mod/quiz/accessrule/examproctor/report.php',
+        ['cmid' => $cmid]
+    ), get_string('backtosummary', $p)));
     echo $OUTPUT->heading(s($names[$attempt->userid] ?? $attempt->userid) . ' - ' .
         get_string('attempt', $p) . ' ' . $attempt->attempt, 3);
 
     $toggle = new moodle_url($url, ['violationsonly' => $violationsonly ? 0 : 1]);
-    $links = [html_writer::link($toggle, get_string($violationsonly ? 'showallevents' : 'showviolationsonly', $p),
-        ['class' => 'btn btn-secondary btn-sm me-2'])];
+    $links = [html_writer::link(
+        $toggle,
+        get_string($violationsonly ? 'showallevents' : 'showviolationsonly', $p),
+        ['class' => 'btn btn-secondary btn-sm me-2']
+    )];
     if (has_capability('quizaccess/examproctor:deleteevidence', $context)) {
-        $links[] = html_writer::link(new moodle_url('/mod/quiz/accessrule/examproctor/report.php',
-            ['cmid' => $cmid, 'delete' => $attempt->id]), get_string('deleteevidence', $p),
-            ['class' => 'btn btn-outline-danger btn-sm']);
+        $links[] = html_writer::link(
+            new moodle_url(
+                '/mod/quiz/accessrule/examproctor/report.php',
+                ['cmid' => $cmid, 'delete' => $attempt->id]
+            ),
+            get_string('deleteevidence', $p),
+            ['class' => 'btn btn-outline-danger btn-sm']
+        );
     }
     echo html_writer::div(implode('', $links), 'mb-3');
 
@@ -206,8 +227,14 @@ if ($attemptid) {
     }
     $perpage = 100;
     $total = $DB->count_records('quizaccess_examproctor_log', $conditions);
-    $logs = $DB->get_records('quizaccess_examproctor_log', $conditions, 'timecreated ASC, id ASC', '*',
-        $page * $perpage, $perpage);
+    $logs = $DB->get_records(
+        'quizaccess_examproctor_log',
+        $conditions,
+        'timecreated ASC, id ASC',
+        '*',
+        $page * $perpage,
+        $perpage
+    );
     if (!$logs) {
         echo $OUTPUT->notification(get_string('noevents', $p), 'info');
     } else {
@@ -224,8 +251,14 @@ if ($attemptid) {
             }
             $snapshot = '';
             if ($log->hassnapshot) {
-                $imgurl = moodle_url::make_pluginfile_url($context->id, $p, 'snapshots', $log->id,
-                    '/', 'snap_' . $log->id . '.jpg');
+                $imgurl = moodle_url::make_pluginfile_url(
+                    $context->id,
+                    $p,
+                    'snapshots',
+                    $log->id,
+                    '/',
+                    'snap_' . $log->id . '.jpg'
+                );
                 $snapshot = html_writer::link($imgurl, html_writer::empty_tag('img', [
                     'src' => $imgurl->out(false),
                     'alt' => get_string('snapshotof', $p, userdate($log->timecreated)),
@@ -265,8 +298,11 @@ if ($attemptid) {
     $dl = [];
     foreach (['summary' => 'downloadsummary', 'events' => 'downloadevents'] as $kind => $str) {
         foreach (['csv' => 'CSV', 'excel' => 'Excel'] as $format => $name) {
-            $dl[] = html_writer::link(new moodle_url($url, ['download' => $format, 'what' => $kind, 'sesskey' => sesskey()]),
-                get_string($str, $p, $name), ['class' => 'btn btn-outline-secondary btn-sm me-2 mb-2']);
+            $dl[] = html_writer::link(
+                new moodle_url($url, ['download' => $format, 'what' => $kind, 'sesskey' => sesskey()]),
+                get_string($str, $p, $name),
+                ['class' => 'btn btn-outline-secondary btn-sm me-2 mb-2']
+            );
         }
     }
     echo html_writer::div(implode('', $dl), 'mb-2');
@@ -311,8 +347,10 @@ if ($attemptid) {
                     'missing' => max(0, $a->expected - (int) $row->snapshots), 'sessions' => (int) $row->sessions]),
                 $snaps,
                 implode(' ', $flags),
-                html_writer::link(new moodle_url('/mod/quiz/accessrule/examproctor/report.php',
-                    ['cmid' => $cmid, 'attemptid' => $row->attemptid]), get_string('viewdetails', $p)),
+                html_writer::link(new moodle_url(
+                    '/mod/quiz/accessrule/examproctor/report.php',
+                    ['cmid' => $cmid, 'attemptid' => $row->attemptid]
+                ), get_string('viewdetails', $p)),
             ];
         }
         echo html_writer::table($table);

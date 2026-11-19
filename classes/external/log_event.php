@@ -32,7 +32,6 @@ use quizaccess_examproctor\local\helper;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class log_event extends external_api {
-
     /** Events allowed per attempt: one per second of attempt time on average, plus this burst. */
     const EVENT_BURST = 120;
 
@@ -121,8 +120,11 @@ class log_event extends external_api {
         }
 
         // Auto-submit, step 2: the browser asks to finish (no page form available), or it ignored step 1.
-        $requested = $DB->get_field('quizaccess_examproctor_log', 'MIN(timecreated)',
-            ['attemptid' => $attempt->id, 'eventtype' => 'autosubmit_requested']);
+        $requested = $DB->get_field(
+            'quizaccess_examproctor_log',
+            'MIN(timecreated)',
+            ['attemptid' => $attempt->id, 'eventtype' => 'autosubmit_requested']
+        );
         if ($requested && ($type === 'autosubmit_now' || time() - $requested > self::AUTOSUBMIT_GRACE)) {
             return self::finish($attempt, $context, $result);
         }
@@ -154,9 +156,13 @@ class log_event extends external_api {
 
         $isviolation = $def->violation ? 1 : 0;
         $details = $params['details'];
-        if ($isviolation && $DB->record_exists_select('quizaccess_examproctor_log',
+        if (
+            $isviolation && $DB->record_exists_select(
+                'quizaccess_examproctor_log',
                 'attemptid = ? AND eventtype = ? AND isviolation = 1 AND timecreated >= ?',
-                [$attempt->id, $type, time() - self::REPEAT_SECONDS])) {
+                [$attempt->id, $type, time() - self::REPEAT_SECONDS]
+            )
+        ) {
             // The same problem reported again within seconds (two tabs, a retry): keep it, but count it once.
             $isviolation = 0;
             $details = '(repeat) ' . $details;
@@ -258,16 +264,22 @@ class log_event extends external_api {
      * @param bool $withimage
      * @return string '' (ok), 'noimage' (record without the image) or 'drop'
      */
-    protected static function check_quota(\stdClass $attempt, \stdClass $settings, bool $violation,
-            bool $withimage): string {
+    protected static function check_quota(
+        \stdClass $attempt,
+        \stdClass $settings,
+        bool $violation,
+        bool $withimage
+    ): string {
         global $DB;
 
         $elapsed = max(0, time() - (int) $attempt->timestart);
         $reason = '';
         $outcome = '';
         if ($violation) {
-            if ($DB->count_records('quizaccess_examproctor_log', ['attemptid' => $attempt->id, 'isviolation' => 1])
-                    >= self::MAX_VIOLATIONS) {
+            if (
+                $DB->count_records('quizaccess_examproctor_log', ['attemptid' => $attempt->id, 'isviolation' => 1])
+                    >= self::MAX_VIOLATIONS
+            ) {
                 $reason = 'violations';
                 $outcome = 'drop';
             }
@@ -287,8 +299,12 @@ class log_event extends external_api {
                 $outcome = 'noimage';
             }
         }
-        if ($reason !== '' && !$DB->record_exists('quizaccess_examproctor_log',
-                ['attemptid' => $attempt->id, 'eventtype' => 'quota_exceeded', 'details' => $reason])) {
+        if (
+            $reason !== '' && !$DB->record_exists(
+                'quizaccess_examproctor_log',
+                ['attemptid' => $attempt->id, 'eventtype' => 'quota_exceeded', 'details' => $reason]
+            )
+        ) {
             helper::log($attempt, 'quota_exceeded', $reason);
         }
         return $outcome;
@@ -321,8 +337,10 @@ class log_event extends external_api {
      */
     protected static function check_sessions(\stdClass $attempt): void {
         global $DB;
-        $sessions = $DB->count_records('quizaccess_examproctor_log',
-            ['attemptid' => $attempt->id, 'eventtype' => 'session_start']);
+        $sessions = $DB->count_records(
+            'quizaccess_examproctor_log',
+            ['attemptid' => $attempt->id, 'eventtype' => 'session_start']
+        );
         if ($sessions >= 2) {
             helper::log($attempt, 'multiple_sessions', $sessions . ' browser sessions');
         }
@@ -366,8 +384,10 @@ class log_event extends external_api {
             return false;
         }
         $info = @getimagesizefromstring($binary);
-        if (!$info || $info['mime'] !== 'image/jpeg' || $info[0] > $def->maxw || $info[1] > $def->maxh
-                || $info[0] < 16 || $info[1] < 16) {
+        if (
+            !$info || $info['mime'] !== 'image/jpeg' || $info[0] > $def->maxw || $info[1] > $def->maxh
+                || $info[0] < 16 || $info[1] < 16
+        ) {
             return false;
         }
 

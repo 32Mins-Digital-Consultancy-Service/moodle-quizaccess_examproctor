@@ -26,7 +26,6 @@ use quizaccess_examproctor\hook\event_types;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class event_registry {
-
     /** Webcam snapshot / evidence frame limits: the browser sends 320 x 240 JPEGs (about 15-40 KB). */
     const CAM_W = 320;
     /** Webcam image height limit. */

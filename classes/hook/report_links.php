@@ -35,13 +35,13 @@ final class report_links {
      * Constructor.
      *
      * @param \stdClass $settings proctoring settings of the quiz
-     * @param \cm_info|\stdClass $cm the course module
+     * @param object $cm the course module (cm_info or stdClass)
      * @param \context_module $context the module context
      */
     public function __construct(
         /** @var \stdClass proctoring settings */
         public readonly \stdClass $settings,
-        /** @var \cm_info|\stdClass the course module */
+        /** @var object the course module (cm_info or stdClass) */
         public readonly object $cm,
         /** @var \context_module the module context */
         public readonly \context_module $context,

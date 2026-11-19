@@ -24,7 +24,6 @@ namespace quizaccess_examproctor\local;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class report_data {
-
     /** Sort orders offered in the report. */
     const SORTS = ['needs', 'violations', 'name', 'recent'];
 
@@ -37,8 +36,12 @@ class report_data {
      * @param string $sort one of SORTS
      * @return array [select sql, count sql, params]
      */
-    public static function summary_sql(int $quizid, string $search = '', bool $flaggedonly = false,
-            string $sort = 'needs'): array {
+    public static function summary_sql(
+        int $quizid,
+        string $search = '',
+        bool $flaggedonly = false,
+        string $sort = 'needs'
+    ): array {
         global $DB;
 
         $types = array_filter(event_registry::flagged_types(), fn($t) => preg_match('/^[a-z0-9_]{1,30}$/', $t));
@@ -61,7 +64,8 @@ class report_data {
                    OR SUM(CASE WHEN l.eventtype = 'session_start' THEN 1 ELSE 0 END) = 0"
             : '';
         $needs = "CASE WHEN SUM(CASE WHEN l.eventtype = 'session_start' THEN 1 ELSE 0 END) = 0 THEN 0 ELSE 1 END,
-                   SUM(CASE WHEN l.isviolation = 1 THEN 1 ELSE 0 END) + SUM(CASE WHEN l.eventtype IN ($flagged) THEN 1 ELSE 0 END) DESC";
+                   SUM(CASE WHEN l.isviolation = 1 THEN 1 ELSE 0 END)
+                   + SUM(CASE WHEN l.eventtype IN ($flagged) THEN 1 ELSE 0 END) DESC";
         $orders = [
             'needs' => "$needs, a.timestart DESC",
             'violations' => 'SUM(CASE WHEN l.isviolation = 1 THEN 1 ELSE 0 END) DESC, a.timestart DESC',

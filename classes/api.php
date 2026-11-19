@@ -28,7 +28,6 @@ use quizaccess_examproctor\local\helper;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class api {
-
     /** Largest webcam image width accepted (pixels). */
     const CAMERA_IMAGE_WIDTH = event_registry::CAM_W;
     /** Largest webcam image height accepted (pixels). */

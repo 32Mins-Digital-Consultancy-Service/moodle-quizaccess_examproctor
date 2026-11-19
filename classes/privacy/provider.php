@@ -5,6 +5,14 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 namespace quizaccess_examproctor\privacy;
 
@@ -25,9 +33,8 @@ use core_privacy\local\request\writer;
  */
 class provider implements
     \core_privacy\local\metadata\provider,
-    \core_privacy\local\request\plugin\provider,
-    \core_privacy\local\request\core_userlist_provider {
-
+    \core_privacy\local\request\core_userlist_provider,
+    \core_privacy\local\request\plugin\provider {
     /** Component name used for the file area. */
     const COMPONENT = 'quizaccess_examproctor';
 
@@ -60,6 +67,12 @@ class provider implements
         return $collection;
     }
 
+    /**
+     * Contexts with data for a user.
+     *
+     * @param int $userid
+     * @return contextlist
+     */
     public static function get_contexts_for_userid(int $userid): contextlist {
         $contextlist = new contextlist();
         $sql = "SELECT DISTINCT ctx.id
@@ -72,6 +85,11 @@ class provider implements
         return $contextlist;
     }
 
+    /**
+     * Users with data in a context.
+     *
+     * @param userlist $userlist
+     */
     public static function get_users_in_context(userlist $userlist) {
         $context = $userlist->get_context();
         if (!$context instanceof \context_module) {
@@ -83,9 +101,13 @@ class provider implements
                   JOIN {quizaccess_examproctor_log} l ON l.quizid = cm.instance
                  WHERE cm.id = :cmid";
         $userlist->add_from_sql('userid', $sql, ['cmid' => $context->instanceid]);
-
     }
 
+    /**
+     * Export a user's data.
+     *
+     * @param approved_contextlist $contextlist
+     */
     public static function export_user_data(approved_contextlist $contextlist) {
         global $DB;
 
@@ -98,8 +120,11 @@ class provider implements
             if (!$cm) {
                 continue;
             }
-            $logs = $DB->get_records('quizaccess_examproctor_log',
-                ['quizid' => $cm->instance, 'userid' => $userid], 'timecreated ASC');
+            $logs = $DB->get_records(
+                'quizaccess_examproctor_log',
+                ['quizid' => $cm->instance, 'userid' => $userid],
+                'timecreated ASC'
+            );
 
             $subcontext = [get_string('pluginname', 'quizaccess_examproctor')];
             $events = [];
@@ -114,12 +139,20 @@ class provider implements
                 if ($log->hassnapshot) {
                     writer::with_context($context)->export_area_files(
                         array_merge($subcontext, ['snapshots', $log->id]),
-                        self::COMPONENT, 'snapshots', $log->id);
+                        self::COMPONENT,
+                        'snapshots',
+                        $log->id
+                    );
                 }
             }
             $consents = [];
-            foreach ($DB->get_records('quizaccess_examproctor_consent', ['quizid' => $cm->instance, 'userid' => $userid],
-                    'timecreated ASC') as $c) {
+            foreach (
+                $DB->get_records(
+                    'quizaccess_examproctor_consent',
+                    ['quizid' => $cm->instance, 'userid' => $userid],
+                    'timecreated ASC'
+                ) as $c
+            ) {
                 $consents[] = (object) ['attemptid' => $c->attemptid, 'version' => $c->version, 'notice' => $c->notice,
                     'timecreated' => transform::datetime($c->timecreated)];
             }
@@ -130,6 +163,11 @@ class provider implements
         }
     }
 
+    /**
+     * Delete all users' data in a context.
+     *
+     * @param \context $context
+     */
     public static function delete_data_for_all_users_in_context(\context $context) {
         global $DB;
 
@@ -146,6 +184,11 @@ class provider implements
         $fs->delete_area_files($context->id, self::COMPONENT, 'snapshots');
     }
 
+    /**
+     * Delete one user's data.
+     *
+     * @param approved_contextlist $contextlist
+     */
     public static function delete_data_for_user(approved_contextlist $contextlist) {
         $userid = $contextlist->get_user()->id;
         foreach ($contextlist->get_contexts() as $context) {
@@ -153,6 +196,11 @@ class provider implements
         }
     }
 
+    /**
+     * Delete several users' data in a context.
+     *
+     * @param approved_userlist $userlist
+     */
     public static function delete_data_for_users(approved_userlist $userlist) {
         self::delete_for_users_in_context($userlist->get_context(), $userlist->get_userids());
     }
@@ -176,8 +224,12 @@ class provider implements
 
         [$insql, $inparams] = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED);
         $params = ['quizid' => $cm->instance] + $inparams;
-        $logids = $DB->get_fieldset_select('quizaccess_examproctor_log', 'id',
-            "quizid = :quizid AND userid $insql", $params);
+        $logids = $DB->get_fieldset_select(
+            'quizaccess_examproctor_log',
+            'id',
+            "quizid = :quizid AND userid $insql",
+            $params
+        );
 
         $fs = get_file_storage();
         foreach ($logids as $logid) {

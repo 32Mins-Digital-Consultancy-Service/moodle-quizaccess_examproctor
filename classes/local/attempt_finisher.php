@@ -24,7 +24,6 @@ namespace quizaccess_examproctor\local;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class attempt_finisher {
-
     /**
      * Submit (and grade) an in-progress attempt without processing new responses.
      *

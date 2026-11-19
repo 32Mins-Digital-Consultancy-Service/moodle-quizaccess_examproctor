@@ -44,8 +44,15 @@ final class event_types {
      * @param int $maximagebytes largest image size accepted with the event
      * @param bool $flag whether the report should highlight it for review although it is not a violation
      */
-    public function add(string $type, bool $violation, string $label, int $maximagewidth = 0,
-            int $maximageheight = 0, int $maximagebytes = 0, bool $flag = false): void {
+    public function add(
+        string $type,
+        bool $violation,
+        string $label,
+        int $maximagewidth = 0,
+        int $maximageheight = 0,
+        int $maximagebytes = 0,
+        bool $flag = false
+    ): void {
         if (!preg_match('/^[a-z0-9_]{1,30}$/', $type)) {
             throw new \coding_exception('Invalid proctoring event type: ' . $type);
         }

@@ -28,7 +28,6 @@ use quizaccess_examproctor\local\helper;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class enforce_autosubmit extends \core\task\scheduled_task {
-
     /**
      * Name.
      *

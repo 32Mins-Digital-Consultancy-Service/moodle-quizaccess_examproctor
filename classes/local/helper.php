@@ -24,7 +24,6 @@ namespace quizaccess_examproctor\local;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class helper {
-
     /** Version of the consent notice; bump whenever the consent wording changes. */
     const CONSENT_VERSION = '2026-11-14';
 

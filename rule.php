@@ -22,8 +22,6 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
 use core\di;
 use core\hook\manager as hook_manager;
 use mod_quiz\local\access_rule_base;
@@ -40,7 +38,6 @@ use quizaccess_examproctor\local\helper;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class quizaccess_examproctor extends access_rule_base {
-
     /** @var stdClass Settings row from quizaccess_examproctor. */
     protected $settings;
 
@@ -133,9 +130,7 @@ class quizaccess_examproctor extends access_rule_base {
         return $messages ? implode(' ', $messages) : false;
     }
 
-    // -------------------------------------------------------------------
     // Consent screen before a new attempt.
-    // -------------------------------------------------------------------
 
     /**
      * Consent is asked before every new attempt.
@@ -202,8 +197,12 @@ class quizaccess_examproctor extends access_rule_base {
                 'muted' => 'muted', 'playsinline' => 'playsinline', 'width' => 160, 'height' => 120,
                 'aria-label' => get_string('devicecheck_preview', $p)]);
             $check .= html_writer::div('', 'examproctor-devicecheck-status small mt-1', ['role' => 'status']);
-            $mform->addElement('static', 'examproctordevicecheck', get_string('devicecheck', $p),
-                html_writer::div($check, 'examproctor-devicecheck'));
+            $mform->addElement(
+                'static',
+                'examproctordevicecheck',
+                get_string('devicecheck', $p),
+                html_writer::div($check, 'examproctor-devicecheck')
+            );
             global $PAGE;
             $PAGE->requires->js_call_amd('quizaccess_examproctor/devicecheck', 'init', [[
                 'ok' => get_string('devicecheck_ok', $p),
@@ -262,7 +261,12 @@ class quizaccess_examproctor extends access_rule_base {
         }
         $quizid = $this->quizobj->get_quizid();
         $pending = $SESSION->quizaccess_examproctor_consent[$quizid] ?? null;
-        if ($pending && !$DB->record_exists('quizaccess_examproctor_log', ['attemptid' => $attempt->id, 'eventtype' => 'consent'])) {
+        if (
+            $pending && !$DB->record_exists(
+                'quizaccess_examproctor_log',
+                ['attemptid' => $attempt->id, 'eventtype' => 'consent']
+            )
+        ) {
             $text = (string) ($pending['text'] ?? '');
             $hash = hash('sha256', $pending['version'] . "\n" . $text);
             $id = helper::log($attempt, 'consent', 'notice ' . $pending['version'] . ', ' . $pending['items'] . ' items, sha256 ' .
@@ -289,9 +293,7 @@ class quizaccess_examproctor extends access_rule_base {
         }
     }
 
-    // -------------------------------------------------------------------
     // Attempt and summary pages: load the proctoring JavaScript.
-    // -------------------------------------------------------------------
 
     /**
      * Load the proctoring script on the attempt page and (lighter) on the summary page.
@@ -319,8 +321,11 @@ class quizaccess_examproctor extends access_rule_base {
         if (!$ispreview) {
             $this->record_attempt_start($attempt);
             // The browser ignored the request to submit after the violation limit: finish it now.
-            $requested = $DB->get_field('quizaccess_examproctor_log', 'MIN(timecreated)',
-                ['attemptid' => $attempt->id, 'eventtype' => 'autosubmit_requested']);
+            $requested = $DB->get_field(
+                'quizaccess_examproctor_log',
+                'MIN(timecreated)',
+                ['attemptid' => $attempt->id, 'eventtype' => 'autosubmit_requested']
+            );
             if ($requested && time() - $requested > \quizaccess_examproctor\external\log_event::AUTOSUBMIT_GRACE) {
                 $url = attempt_finisher::finish((int) $attempt->id);
                 helper::log($attempt, 'autosubmit', 'Violation limit reached (page reload)');
@@ -330,13 +335,17 @@ class quizaccess_examproctor extends access_rule_base {
 
         $p = 'quizaccess_examproctor';
         $strings = [];
-        foreach (['camerarequired', 'camerabutton', 'fullscreenrequired', 'fullscreenbutton', 'autosubmit',
+        foreach (
+            ['camerarequired', 'camerabutton', 'fullscreenrequired', 'fullscreenbutton', 'autosubmit',
                 'warn_generic', 'active', 'active_preview', 'preview_note', 'ovl_camera_covered', 'ovl_video_frozen',
-                'dialoglabel', 'analysis_disabled_note', 'fullscreen_waived', 'selfview_toggle', 'fullscreen_refused'] as $key) {
+                'dialoglabel', 'analysis_disabled_note', 'fullscreen_waived', 'selfview_toggle', 'fullscreen_refused'] as $key
+        ) {
             $strings[$key] = get_string('js_' . $key, $p);
         }
-        foreach (['tab_hidden', 'window_blur', 'fullscreen_exit', 'copy', 'paste', 'contextmenu', 'camera_lost',
-                'camera_denied', 'camera_covered', 'video_frozen'] as $type) {
+        foreach (
+            ['tab_hidden', 'window_blur', 'fullscreen_exit', 'copy', 'paste', 'contextmenu', 'camera_lost',
+                'camera_denied', 'camera_covered', 'video_frozen'] as $type
+        ) {
             $strings['warn_' . $type] = get_string('js_warn_' . $type, $p);
         }
 
@@ -367,9 +376,7 @@ class quizaccess_examproctor extends access_rule_base {
         $page->requires->js_call_amd('quizaccess_examproctor/proctor', 'init', []);
     }
 
-    // -------------------------------------------------------------------
     // Quiz settings form (Extra restrictions section).
-    // -------------------------------------------------------------------
 
     /**
      * Add the proctoring fields to the quiz settings form.
@@ -456,8 +463,10 @@ class quizaccess_examproctor extends access_rule_base {
             if (isset($data['examproctor_maxviolations']) && (int) $data['examproctor_maxviolations'] < 0) {
                 $errors['examproctor_maxviolations'] = get_string('maxviolationsinvalid', $p);
             }
-            if (isset($data['examproctor_retentiondays'])
-                    && ((int) $data['examproctor_retentiondays'] < 0 || (int) $data['examproctor_retentiondays'] > 3650)) {
+            if (
+                isset($data['examproctor_retentiondays'])
+                    && ((int) $data['examproctor_retentiondays'] < 0 || (int) $data['examproctor_retentiondays'] > 3650)
+            ) {
                 $errors['examproctor_retentiondays'] = get_string('retentiondaysinvalid', $p);
             }
             $hook = new hook\settings_validate($data, $quizform);

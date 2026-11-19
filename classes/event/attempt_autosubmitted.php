@@ -24,7 +24,6 @@ namespace quizaccess_examproctor\event;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class attempt_autosubmitted extends \core\event\base {
-
     /**
      * Init.
      */
@@ -49,7 +48,8 @@ class attempt_autosubmitted extends \core\event\base {
      * @return string
      */
     public function get_description() {
-        return "The quiz attempt '$this->objectid' of the user with id '$this->relateduserid' was submitted automatically after reaching the proctoring violation limit.";
+        return "The quiz attempt '$this->objectid' of the user with id '$this->relateduserid' " .
+            "was submitted automatically after reaching the proctoring violation limit.";
     }
 
     /**
@@ -58,8 +58,10 @@ class attempt_autosubmitted extends \core\event\base {
      * @return \moodle_url
      */
     public function get_url() {
-        return new \moodle_url('/mod/quiz/accessrule/examproctor/report.php',
-            ['cmid' => $this->contextinstanceid, 'attemptid' => $this->objectid]);
+        return new \moodle_url(
+            '/mod/quiz/accessrule/examproctor/report.php',
+            ['cmid' => $this->contextinstanceid, 'attemptid' => $this->objectid]
+        );
     }
 
     /**

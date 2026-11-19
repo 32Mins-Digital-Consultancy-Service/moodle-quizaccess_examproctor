@@ -24,7 +24,6 @@ namespace quizaccess_examproctor\event;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class evidence_deleted extends \core\event\base {
-
     /**
      * Init.
      */
@@ -49,7 +48,8 @@ class evidence_deleted extends \core\event\base {
      * @return string
      */
     public function get_description() {
-        return "The user with id '$this->userid' deleted the proctoring evidence of quiz attempt '$this->objectid' (student '$this->relateduserid').";
+        return "The user with id '$this->userid' deleted the proctoring evidence of quiz attempt '$this->objectid' " .
+            "(student '$this->relateduserid').";
     }
 
     /**
@@ -58,8 +58,10 @@ class evidence_deleted extends \core\event\base {
      * @return \moodle_url
      */
     public function get_url() {
-        return new \moodle_url('/mod/quiz/accessrule/examproctor/report.php',
-            ['cmid' => $this->contextinstanceid, 'attemptid' => $this->objectid]);
+        return new \moodle_url(
+            '/mod/quiz/accessrule/examproctor/report.php',
+            ['cmid' => $this->contextinstanceid, 'attemptid' => $this->objectid]
+        );
     }
 
     /**

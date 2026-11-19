@@ -26,7 +26,6 @@ use quizaccess_examproctor\local\helper;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class cleanup_evidence extends \core\task\scheduled_task {
-
     /**
      * Task name.
      *
@@ -61,8 +60,12 @@ class cleanup_evidence extends \core\task\scheduled_task {
                 continue;
             }
             $context = \context_module::instance($cm->id);
-            $total += helper::delete_logs($context, 'quizid = :quizid AND timecreated < :cutoff',
-                ['quizid' => $quizid, 'cutoff' => $cutoff], true);
+            $total += helper::delete_logs(
+                $context,
+                'quizid = :quizid AND timecreated < :cutoff',
+                ['quizid' => $quizid, 'cutoff' => $cutoff],
+                true
+            );
         }
         if ($total) {
             mtrace('Deleted ' . $total . ' expired proctoring event(s) and their images.');

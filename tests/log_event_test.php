@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-
 namespace quizaccess_examproctor;
 
 use quizaccess_examproctor\external\log_event;
@@ -24,6 +23,8 @@ defined('MOODLE_INTERNAL') || die();
 global $CFG;
 require_once($CFG->dirroot . '/mod/quiz/locallib.php');
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\quizaccess_examproctor\external\log_event::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\quizaccess_examproctor\task\enforce_autosubmit::class)]
 /**
  * Tests for the event logger: quotas, repeats, heartbeat, auto-submit.
  *
@@ -33,10 +34,7 @@ require_once($CFG->dirroot . '/mod/quiz/locallib.php');
  * @covers     \quizaccess_examproctor\external\log_event
  * @covers     \quizaccess_examproctor\task\enforce_autosubmit
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\quizaccess_examproctor\external\log_event::class)]
-#[\PHPUnit\Framework\Attributes\CoversClass(\quizaccess_examproctor\task\enforce_autosubmit::class)]
 final class log_event_test extends \advanced_testcase {
-
     /**
      * A proctored quiz with one in-progress attempt by a student, started $ago seconds ago.
      *
@@ -99,8 +97,10 @@ final class log_event_test extends \advanced_testcase {
         for ($i = 0; $i < 3; $i++) {
             log_event::execute($attempt->id, 'heartbeat');
         }
-        $this->assertSame(1, $DB->count_records('quizaccess_examproctor_log',
-            ['attemptid' => $attempt->id, 'eventtype' => 'heartbeat']));
+        $this->assertSame(1, $DB->count_records(
+            'quizaccess_examproctor_log',
+            ['attemptid' => $attempt->id, 'eventtype' => 'heartbeat']
+        ));
     }
 
     public function test_autosubmit_off_unless_site_allows(): void {
