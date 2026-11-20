@@ -1,0 +1,10 @@
+# Keep LF line endings in the repository, in checkouts and in `git archive` release ZIPs, also on Windows.
+* text=auto eol=lf
+*.task binary
+*.wasm binary
+*.png binary
+*.jpg binary
+.gitattributes export-ignore
+.github export-ignore
+.moodle-plugin-ci.yml export-ignore
+dev export-ignore

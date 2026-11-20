@@ -75,7 +75,7 @@ try { log_event::execute($attempt->id, 'face_magic', ''); check(false, 'unknown'
 log_event::execute($attempt->id, 'session_start', 'Chrome second tab');
 check($DB->record_exists('quizaccess_examproctor_log', ['attemptid'=>$attempt->id,'eventtype'=>'multiple_sessions']), 'second session flagged multiple_sessions');
 $r1 = log_event::execute($attempt->id, 'tab_hidden');
-$r2 = log_event::execute($attempt->id, 'window_blur');
+$r2 = log_event::execute($attempt->id, 'copy');
 check($r2['violations'] == 2 && !$r2['submitnow'], 'two violations, no submit yet');
 $r3 = log_event::execute($attempt->id, 'fullscreen_exit');
 check($r3['submitnow'] === true, 'limit 3 reached -> browser asked to submit the page first');

@@ -18,15 +18,15 @@
  * Version information for the exam proctoring quiz access rule.
  *
  * @package    quizaccess_examproctor
- * @copyright  2026 32Mins
+ * @copyright  2026 32Mins Digital
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'quizaccess_examproctor';
-$plugin->version   = 2026111700;
+$plugin->version   = 2026112000;
 $plugin->requires  = 2024100700; // Moodle 4.5 LTS.
 $plugin->supported = [405, 503];
 $plugin->maturity  = MATURITY_RC;
-$plugin->release   = '1.3.2';
+$plugin->release   = '1.3.4';

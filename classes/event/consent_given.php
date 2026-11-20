@@ -17,10 +17,10 @@
 namespace quizaccess_examproctor\event;
 
 /**
- * Event: a student consented to proctoring
+ * Event: a learner consented to proctoring
  *
  * @package    quizaccess_examproctor
- * @copyright  2026 32Mins
+ * @copyright  2026 32Mins Digital
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class consent_given extends \core\event\base {

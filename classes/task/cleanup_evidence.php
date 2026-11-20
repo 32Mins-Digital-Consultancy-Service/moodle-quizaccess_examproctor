@@ -22,7 +22,7 @@ use quizaccess_examproctor\local\helper;
  * Deletes proctoring events and images older than each quiz's retention period.
  *
  * @package    quizaccess_examproctor
- * @copyright  2026 32Mins
+ * @copyright  2026 32Mins Digital
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class cleanup_evidence extends \core\task\scheduled_task {

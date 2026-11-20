@@ -22,7 +22,7 @@ use core\attribute;
  * Lets other plugins delete their data when a quiz is deleted.
  *
  * @package    quizaccess_examproctor
- * @copyright  2026 32Mins
+ * @copyright  2026 32Mins Digital
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 #[attribute\label('Delete exam proctoring data of a quiz')]

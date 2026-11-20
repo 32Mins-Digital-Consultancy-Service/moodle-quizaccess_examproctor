@@ -18,7 +18,7 @@
  * Strings for quizaccess_examproctor.
  *
  * @package    quizaccess_examproctor
- * @copyright  2026 32Mins
+ * @copyright  2026 32Mins Digital
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -32,7 +32,7 @@ $string['consent_focus'] = 'Switching tabs or leaving the quiz window is recorde
 $string['consent_fullscreen'] = 'The quiz must stay in fullscreen mode.';
 $string['consent_intro'] = 'This quiz is proctored. During the attempt:';
 $string['consent_maxviolations'] = 'Your attempt is submitted automatically after {$a} violations.';
-$string['consent_minors'] = 'Your webcam is NOT used. Only your browser activity is recorded.';
+$string['consent_minors'] = 'Your webcam is not used. Only your browser activity is recorded.';
 $string['consent_required'] = 'You must consent to proctoring to start this quiz.';
 $string['consent_retention'] = 'Recorded events and images are deleted after {$a} days.';
 $string['consent_version'] = 'Notice version {$a}. Your consent is recorded with your attempt.';
@@ -75,6 +75,7 @@ $string['event_tab_hidden'] = 'Left the quiz tab';
 $string['event_tab_returned'] = 'Came back to the quiz tab';
 $string['event_video_frozen'] = 'Camera video frozen';
 $string['event_window_blur'] = 'Switched to another window';
+$string['event_window_brief'] = 'Switched window briefly (under 2 s)';
 $string['event_window_returned'] = 'Came back to the quiz window';
 $string['eventattempt_autosubmitted'] = 'Attempt submitted after proctoring violations';
 $string['eventconsent_given'] = 'Consent to proctoring given';
@@ -98,35 +99,35 @@ $string['fullscreenstrict_continue'] = 'Continue and flag it for review';
 $string['fullscreenstrict_help'] = 'Some browsers, kiosk modes or site settings refuse fullscreen. "Continue and flag": the quiz continues and the report flags "Fullscreen not available" (no learner is locked out). "Keep the paper hidden": the quiz stays hidden until fullscreen works; use this only where you control the computers (for example a lab), because a learner whose browser cannot go fullscreen cannot continue.';
 $string['integrity'] = 'Summary';
 $string['integrity_line'] = '{$a->violations} violation(s) · {$a->flags} flag(s) · {$a->missing} missing snapshot(s) · {$a->sessions} session(s)';
-$string['js_active'] = 'Exam proctoring active';
-$string['js_active_preview'] = 'Exam proctoring active (preview - nothing is recorded)';
+$string['js_active'] = 'Proctoring on';
+$string['js_active_preview'] = 'Proctoring on (preview: nothing is recorded)';
 $string['js_analysis_disabled_note'] = 'Camera analysis was switched off because this computer is too slow. This has been recorded.';
 $string['js_autosubmit'] = 'Too many violations were recorded. Your attempt is being submitted.';
-$string['js_camerabutton'] = 'Enable camera';
-$string['js_camerarequired'] = 'Webcam access is required for this quiz. Please allow camera access to continue.';
+$string['js_camerabutton'] = 'Turn on camera';
+$string['js_camerarequired'] = 'This quiz needs your webcam. Allow camera access to continue.';
 $string['js_dialoglabel'] = 'Exam proctoring';
 $string['js_fullscreen_refused'] = 'This exam must be taken in fullscreen, but your browser refused it. Allow fullscreen for this site in the browser settings and press the button again, or ask your teacher for help.';
 $string['js_fullscreen_waived'] = 'Fullscreen is not available in this browser. You can continue the quiz; your teacher will see this in the report.';
 $string['js_fullscreenbutton'] = 'Enter fullscreen';
-$string['js_fullscreenrequired'] = 'This quiz must be taken in fullscreen mode.';
+$string['js_fullscreenrequired'] = 'This quiz runs in fullscreen.';
 $string['js_ovl_camera_covered'] = 'Your camera image is blocked or too dark. Uncover the camera and make sure the room is lit.';
 $string['js_ovl_video_frozen'] = 'Your camera video appears frozen. Check that the camera works, close other apps using it, or reconnect it.';
 $string['js_preview_note'] = '(Preview: not recorded)';
 $string['js_selfview_toggle'] = 'Your camera. Click to make it smaller or larger.';
-$string['js_warn_camera_covered'] = 'Warning: your camera is covered or blocked. This has been recorded.';
-$string['js_warn_camera_denied'] = 'Warning: camera access was refused. This has been recorded.';
-$string['js_warn_camera_lost'] = 'Warning: your camera stopped. This has been recorded.';
-$string['js_warn_contextmenu'] = 'Right-click is disabled during this quiz. This has been recorded.';
-$string['js_warn_copy'] = 'Copying is disabled during this quiz. This has been recorded.';
-$string['js_warn_fullscreen_exit'] = 'Warning: you exited fullscreen. This has been recorded.';
-$string['js_warn_generic'] = 'Violation recorded.';
-$string['js_warn_paste'] = 'Pasting is disabled during this quiz. This has been recorded.';
-$string['js_warn_tab_hidden'] = 'Warning: you left the quiz tab. This has been recorded.';
-$string['js_warn_video_frozen'] = 'Warning: your camera video appears frozen. This has been recorded.';
-$string['js_warn_window_blur'] = 'Warning: the quiz window lost focus. This has been recorded.';
+$string['js_warn_camera_covered'] = 'Your camera is covered or blocked. This was recorded.';
+$string['js_warn_camera_denied'] = 'Camera access was refused. This was recorded.';
+$string['js_warn_camera_lost'] = 'Your camera stopped. This was recorded.';
+$string['js_warn_contextmenu'] = 'Right-click is off during this quiz. This was recorded.';
+$string['js_warn_copy'] = 'Copying is off during this quiz. This was recorded.';
+$string['js_warn_fullscreen_exit'] = 'You left fullscreen. This was recorded.';
+$string['js_warn_generic'] = 'This was recorded.';
+$string['js_warn_paste'] = 'Pasting is off during this quiz. This was recorded.';
+$string['js_warn_tab_hidden'] = 'You left the quiz tab. This was recorded.';
+$string['js_warn_video_frozen'] = 'Your camera video looks frozen. This was recorded.';
+$string['js_warn_window_blur'] = 'You switched to another window. This was recorded.';
 $string['live_active'] = 'In progress - last signal {$a} ago';
 $string['live_nodata'] = 'In progress - no data from the browser';
-$string['live_silent'] = 'In progress - SILENT for {$a}';
+$string['live_silent'] = 'In progress - no signal for {$a}';
 $string['livestatus'] = 'Status';
 $string['maxviolations'] = 'Violations before auto-submit';
 $string['maxviolations_help'] = 'The attempt is submitted automatically once this many violations are recorded. The page is saved first, so answers typed on it are kept; if the browser does not submit it, the server does within about a minute. A problem that lasts (for example a frozen camera) counts once, not every time it is recorded again. Set to 0 to never auto-submit.';
@@ -166,7 +167,7 @@ $string['retentiondays_help'] = 'Events and webcam images of this quiz are delet
 $string['retentiondaysinvalid'] = 'Enter a number of days from 0 to 3650.';
 $string['retentionkeep'] = 'Events and images are kept until the quiz is deleted.';
 $string['retentionnotice'] = 'Events and images are deleted automatically {$a} days after they were recorded.';
-$string['searchstudent'] = 'Learner name or e-mail';
+$string['searchstudent'] = 'Learner name or email';
 $string['sessions'] = 'Browser sessions';
 $string['settings_allowautosubmit'] = 'Allow auto-submit after violations';
 $string['settings_allowautosubmit_desc'] = 'Off by default: violations are recorded and flagged for a teacher to judge, and no attempt is submitted automatically. When ticked, teachers can set "Violations before auto-submit" per quiz.';

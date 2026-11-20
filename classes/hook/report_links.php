@@ -22,7 +22,7 @@ use core\attribute;
  * Lets other plugins add links to the proctoring report and the quiz page.
  *
  * @package    quizaccess_examproctor
- * @copyright  2026 32Mins
+ * @copyright  2026 32Mins Digital
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 #[attribute\label('Add links to the exam proctoring report')]

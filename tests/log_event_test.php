@@ -29,7 +29,7 @@ require_once($CFG->dirroot . '/mod/quiz/locallib.php');
  * Tests for the event logger: quotas, repeats, heartbeat, auto-submit.
  *
  * @package    quizaccess_examproctor
- * @copyright  2026 32Mins
+ * @copyright  2026 32Mins Digital
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \quizaccess_examproctor\external\log_event
  * @covers     \quizaccess_examproctor\task\enforce_autosubmit
@@ -91,6 +91,19 @@ final class log_event_test extends \advanced_testcase {
         $this->assertSame(1, $continues['violations']);
     }
 
+    public function test_one_action_counts_once(): void {
+        // Leaving for another app loses the window focus and then hides the tab: one departure, one violation.
+        $attempt = $this->make_attempt();
+        $first = log_event::execute($attempt->id, 'window_blur');
+        $this->assertTrue($first['violation']);
+        $second = log_event::execute($attempt->id, 'tab_hidden');
+        $this->assertFalse($second['violation']);
+        $this->assertSame(1, $second['violations']);
+        $brief = log_event::execute($attempt->id, 'window_brief', 'away 1 s');
+        $this->assertFalse($brief['violation']);
+        $this->assertContains('window_brief', \quizaccess_examproctor\local\event_registry::flagged_types());
+    }
+
     public function test_heartbeat_keeps_one_row(): void {
         global $DB;
         $attempt = $this->make_attempt(600, 0);
@@ -117,7 +130,7 @@ final class log_event_test extends \advanced_testcase {
         global $DB;
         $attempt = $this->make_attempt();
         set_config('allowautosubmit', 1, 'quizaccess_examproctor');
-        foreach (['tab_hidden', 'window_blur', 'copy'] as $type) {
+        foreach (['tab_hidden', 'copy', 'paste'] as $type) {
             $result = log_event::execute($attempt->id, $type);
         }
         $this->assertTrue($result['submitnow']);

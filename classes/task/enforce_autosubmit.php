@@ -21,10 +21,10 @@ use quizaccess_examproctor\local\helper;
 
 /**
  * Every minute: submit attempts that reached the violation limit but whose browser did not submit them
- * (for example a student who blocks the page's requests on a one-page quiz).
+ * (for example a learner who blocks the page's requests on a one-page quiz).
  *
  * @package    quizaccess_examproctor
- * @copyright  2026 32Mins
+ * @copyright  2026 32Mins Digital
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class enforce_autosubmit extends \core\task\scheduled_task {

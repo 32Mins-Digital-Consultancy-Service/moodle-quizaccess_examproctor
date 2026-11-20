@@ -22,7 +22,7 @@ require_once($CFG->dirroot . '/mod/quiz/backup/moodle2/restore_mod_quiz_access_s
  * Restores the proctoring settings of a quiz (also used when a quiz is duplicated).
  *
  * @package    quizaccess_examproctor
- * @copyright  2026 32Mins
+ * @copyright  2026 32Mins Digital
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class restore_quizaccess_examproctor_subplugin extends restore_mod_quiz_access_subplugin {

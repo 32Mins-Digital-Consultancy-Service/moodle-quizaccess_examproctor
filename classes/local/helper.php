@@ -20,12 +20,12 @@ namespace quizaccess_examproctor\local;
  * Shared helpers.
  *
  * @package    quizaccess_examproctor
- * @copyright  2026 32Mins
+ * @copyright  2026 32Mins Digital
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class helper {
     /** Version of the consent notice; bump whenever the consent wording changes. */
-    const CONSENT_VERSION = '2026-11-14';
+    const CONSENT_VERSION = '2026-11-20';
 
     /** Snapshots may lag by this many intervals before the attempt is flagged. */
     const GAP_INTERVALS = 2;

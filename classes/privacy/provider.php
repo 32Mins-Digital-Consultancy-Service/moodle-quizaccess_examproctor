@@ -28,7 +28,7 @@ use core_privacy\local\request\writer;
  * Privacy provider for the exam proctoring rule.
  *
  * @package    quizaccess_examproctor
- * @copyright  2026 32Mins
+ * @copyright  2026 32Mins Digital
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class provider implements

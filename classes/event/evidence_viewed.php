@@ -20,7 +20,7 @@ namespace quizaccess_examproctor\event;
  * Event: proctoring evidence of an attempt was viewed
  *
  * @package    quizaccess_examproctor
- * @copyright  2026 32Mins
+ * @copyright  2026 32Mins Digital
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class evidence_viewed extends \core\event\base {
@@ -49,7 +49,7 @@ class evidence_viewed extends \core\event\base {
      */
     public function get_description() {
         return "The user with id '$this->userid' viewed the proctoring evidence of quiz attempt '$this->objectid' " .
-            "(student '$this->relateduserid').";
+            "(learner '$this->relateduserid').";
     }
 
     /**

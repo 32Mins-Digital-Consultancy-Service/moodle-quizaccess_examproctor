@@ -18,7 +18,7 @@
  * Proctoring report: per-attempt summary (including attempts that sent nothing) and per-attempt timeline.
  *
  * @package    quizaccess_examproctor
- * @copyright  2026 32Mins
+ * @copyright  2026 32Mins Digital
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 

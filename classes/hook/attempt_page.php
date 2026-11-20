@@ -25,7 +25,7 @@ use core\attribute;
  * register camera analysers, show blocking screens and send events (see amd/src/proctor.js).
  *
  * @package    quizaccess_examproctor
- * @copyright  2026 32Mins
+ * @copyright  2026 32Mins Digital
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 #[attribute\label('Add checks to a proctored quiz attempt page')]

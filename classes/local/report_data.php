@@ -20,7 +20,7 @@ namespace quizaccess_examproctor\local;
  * Data for the proctoring report: one row per attempt, including attempts with no proctoring data at all.
  *
  * @package    quizaccess_examproctor
- * @copyright  2026 32Mins
+ * @copyright  2026 32Mins Digital
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class report_data {
@@ -31,7 +31,7 @@ class report_data {
      * SQL for the summary rows.
      *
      * @param int $quizid
-     * @param string $search part of the student's name or e-mail
+     * @param string $search part of the learner's name or email
      * @param bool $flaggedonly only attempts with violations or flags
      * @param string $sort one of SORTS
      * @return array [select sql, count sql, params]

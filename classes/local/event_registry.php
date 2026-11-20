@@ -22,7 +22,7 @@ use quizaccess_examproctor\hook\event_types;
  * The event types the server accepts, with their violation flag, report label and image limits.
  *
  * @package    quizaccess_examproctor
- * @copyright  2026 32Mins
+ * @copyright  2026 32Mins Digital
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class event_registry {
@@ -59,6 +59,7 @@ class event_registry {
         'tab_returned' => [0, 0],
         'window_blur' => [1, 0],
         'window_returned' => [0, 0],
+        'window_brief' => [0, 0],
         'fullscreen_exit' => [1, 0],
         'fullscreen_unsupported' => [0, 0],
         'copy' => [1, 0],
@@ -77,7 +78,7 @@ class event_registry {
 
     /** Events the report highlights as needing a look although they are not violations. */
     const FLAGGED = ['multiple_sessions', 'quota_exceeded', 'analysis_disabled', 'extension_error', 'fullscreen_unsupported',
-        'camera_denied', 'camera_lost', 'video_frozen'];
+        'camera_denied', 'camera_lost', 'video_frozen', 'window_brief'];
 
     /**
      * All event types.

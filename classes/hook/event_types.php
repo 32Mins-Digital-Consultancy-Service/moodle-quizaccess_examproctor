@@ -24,7 +24,7 @@ use core\attribute;
  * The server only records event types declared by the core or through this hook.
  *
  * @package    quizaccess_examproctor
- * @copyright  2026 32Mins
+ * @copyright  2026 32Mins Digital
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 #[attribute\label('Declare exam proctoring event types')]

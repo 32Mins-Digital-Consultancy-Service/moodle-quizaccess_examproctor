@@ -20,7 +20,7 @@ namespace quizaccess_examproctor\local;
  * Submits an attempt in a way that works on Moodle 4.5 and on 5.x, where process_finish() is deprecated.
  *
  * @package    quizaccess_examproctor
- * @copyright  2026 32Mins
+ * @copyright  2026 32Mins Digital
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class attempt_finisher {

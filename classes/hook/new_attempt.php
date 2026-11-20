@@ -19,10 +19,10 @@ namespace quizaccess_examproctor\hook;
 use core\attribute;
 
 /**
- * Lets other plugins stop a student starting a proctored attempt (for example until an identity check is done).
+ * Lets other plugins stop a learner starting a proctored attempt (for example until an identity check is done).
  *
  * @package    quizaccess_examproctor
- * @copyright  2026 32Mins
+ * @copyright  2026 32Mins Digital
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 #[attribute\label('Check before a proctored attempt starts')]
@@ -36,14 +36,14 @@ final class new_attempt {
      *
      * @param \stdClass $settings proctoring settings of the quiz
      * @param \mod_quiz\quiz_settings $quizobj the quiz
-     * @param int $userid the student
+     * @param int $userid the learner
      */
     public function __construct(
         /** @var \stdClass proctoring settings */
         public readonly \stdClass $settings,
         /** @var \mod_quiz\quiz_settings the quiz */
         public readonly \mod_quiz\quiz_settings $quizobj,
-        /** @var int the student */
+        /** @var int the learner */
         public readonly int $userid,
     ) {
     }

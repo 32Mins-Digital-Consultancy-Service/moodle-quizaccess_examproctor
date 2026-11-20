@@ -23,7 +23,7 @@
  * Written in ES5 AMD syntax.
  *
  * @module     quizaccess_examproctor/proctor
- * @copyright  2026 32Mins
+ * @copyright  2026 32Mins Digital
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 define(['core/ajax', 'core_form/changechecker'], function(Ajax, ChangeChecker) {
@@ -40,6 +40,13 @@ define(['core/ajax', 'core_form/changechecker'], function(Ajax, ChangeChecker) {
     var SLOW_PASSES = 3; // ...and this many in a row switch the extra analysers off.
     var DARK_LEVEL = 12; // Mean brightness (0-255) below which the camera counts as covered.
     var FLAT_LEVEL = 8; // Brightness spread below which the picture is a flat field (hand over the lens).
+    // A finger over the lens in a lit room glows red instead of going dark: almost every pixel strongly red...
+    var GLOW_SHARE = 0.9;
+    // ...and almost no detail (mean difference between neighbouring pixels, 0-255).
+    var GLOW_DETAIL = 4;
+    var BRIEF_MS = 2000; // A window switch shorter than this is flagged for review, not counted as a violation.
+    var PROMPT_SUSPEND_MS = 15000; // Ignore focus changes while the browser's camera permission prompt is open.
+    var RESUME_TAIL_MS = 1000; // ...and for this long after it closes, while focus returns to the page.
     var SAMPLE_W = 64; // Tiny grayscale copy used for covered / frozen / motion maths.
     var SAMPLE_H = 48;
     var MAX_GAP_MS = 4000; // Frames further apart than this are not compared.
@@ -47,7 +54,7 @@ define(['core/ajax', 'core_form/changechecker'], function(Ajax, ChangeChecker) {
     var FROZEN_IDENTICAL_MS = 15000;
     var FROZEN_STALL_MS = 5000;
     var WARMUP_MS = 5000; // Ignore covered / frozen while the camera adjusts after starting.
-    var HEARTBEAT_MS = 60000; // "Still here" signal, so a quiet student never looks silent in the report.
+    var HEARTBEAT_MS = 60000; // "Still here" signal, so a quiet learner never looks silent in the report.
     var VIOLATION_TYPES = ['camera_denied', 'camera_lost', 'camera_covered', 'video_frozen', 'tab_hidden',
         'window_blur', 'fullscreen_exit', 'copy', 'paste', 'contextmenu'];
 
@@ -70,6 +77,8 @@ define(['core/ajax', 'core_form/changechecker'], function(Ajax, ChangeChecker) {
     var banner = null;
     var bannerTimer = null;
     var badgeEl = null;
+    var badgeDot = null;
+    var badgeText = null;
 
     var blockers = {camera: false, fullscreen: false, problem: null};
     var extraBlockers = []; // [{name, text, button, onClick}] in the order they were added.
@@ -96,6 +105,8 @@ define(['core/ajax', 'core_form/changechecker'], function(Ajax, ChangeChecker) {
     var fullscreenWaived = false; // The browser refused fullscreen: the quiz continues and the report shows it.
     var fullscreenRefused = false; // Strict quizzes: the browser refused, the paper stays hidden.
     var blurAt = 0;
+    var blurConfirmed = false; // The window switch lasted BRIEF_MS and was recorded as a violation.
+    var blurTimer = null;
 
     // Small per-attempt memory in this tab, so a page reload does not start from scratch.
     var store = {
@@ -213,15 +224,18 @@ define(['core/ajax', 'core_form/changechecker'], function(Ajax, ChangeChecker) {
     };
 
     // -------------------------------------------------------------------
-    // Banner, badge and the blocking screen.
+    // Banner, badge and the blocking screen. Kept small and calm: the quiz stays the main thing on the page,
+    // and the theme's own colours are used so the look fits every Moodle site.
     // -------------------------------------------------------------------
 
     var showBanner = function(message) {
         if (!banner) {
             banner = document.createElement('div');
             banner.setAttribute('role', 'alert');
-            banner.className = 'alert alert-danger fw-bold text-center mb-0 rounded-0';
-            banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:100001;pointer-events:none;';
+            banner.className = 'alert alert-warning shadow-sm mb-0';
+            banner.style.cssText = 'position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:100001;' +
+                'pointer-events:none;width:max-content;max-width:calc(100vw - 24px);padding:8px 16px;' +
+                'font-size:0.95rem;line-height:1.4;text-align:center;border-radius:12px;';
             document.body.appendChild(banner);
         }
         banner.textContent = message;
@@ -229,13 +243,15 @@ define(['core/ajax', 'core_form/changechecker'], function(Ajax, ChangeChecker) {
         window.clearTimeout(bannerTimer);
         bannerTimer = window.setTimeout(function() {
             banner.style.display = 'none';
-        }, 7000);
+        }, 6000);
     };
 
     var updateBadge = function() {
         if (!badgeEl) {
             return;
         }
+        var blocked = overlay && overlay.style.display !== 'none';
+        badgeDot.style.background = blocked ? 'var(--bs-warning, #f0ad4e)' : 'var(--bs-success, #198754)';
         var text = cfg.preview ? strings.active_preview : strings.active;
         if (cfg.preview || debugMode) {
             var camerastate = 'not used';
@@ -250,17 +266,24 @@ define(['core/ajax', 'core_form/changechecker'], function(Ajax, ChangeChecker) {
                 ' | fullscreen: ' + (cfg.requirefullscreen ? 'required' : 'no') +
                 ' | issue: ' + (problem || 'none') +
                 ' | pass: ' + lastTickMs + ' ms' +
-                ' | screen: ' + (overlay.style.display === 'none' ? 'clear' : 'BLOCKED');
+                ' | screen: ' + (blocked ? 'BLOCKED' : 'clear');
         }
-        badgeEl.textContent = text;
+        badgeText.textContent = text;
     };
 
     var buildBadge = function() {
         badgeEl = document.createElement('div');
         badgeEl.setAttribute('aria-hidden', 'true');
-        badgeEl.className = 'badge badge-primary bg-primary text-wrap text-start';
-        badgeEl.style.cssText = 'position:fixed;left:12px;bottom:12px;z-index:100000;font-size:12px;pointer-events:none;' +
-            'max-width:70vw;';
+        badgeEl.className = 'badge badge-light bg-light text-dark border rounded-pill text-wrap text-start';
+        badgeEl.style.cssText = 'position:fixed;left:12px;bottom:12px;z-index:100000;font-size:12px;font-weight:500;' +
+            'pointer-events:none;max-width:70vw;padding:4px 10px;opacity:0.9;';
+        badgeDot = document.createElement('span');
+        badgeDot.style.cssText = 'display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;' +
+            'vertical-align:middle;';
+        badgeText = document.createElement('span');
+        badgeText.style.verticalAlign = 'middle';
+        badgeEl.appendChild(badgeDot);
+        badgeEl.appendChild(badgeText);
         document.body.appendChild(badgeEl);
         updateBadge();
     };
@@ -270,19 +293,28 @@ define(['core/ajax', 'core_form/changechecker'], function(Ajax, ChangeChecker) {
         overlay.setAttribute('role', 'dialog');
         overlay.setAttribute('aria-modal', 'true');
         overlay.setAttribute('aria-label', strings.dialoglabel || 'Exam proctoring');
-        overlay.style.cssText = 'display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.93);' +
-            'color:#fff;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:24px;';
+        // The backdrop keeps the paper hidden; the message sits on a plain card in the theme's colours.
+        overlay.style.cssText = 'display:none;position:fixed;inset:0;z-index:99999;background:rgba(17,17,17,0.94);' +
+            'align-items:center;justify-content:center;padding:16px;';
+        var card = document.createElement('div');
+        card.className = 'card shadow';
+        card.style.cssText = 'width:100%;max-width:30rem;padding:28px 24px;text-align:center;border-radius:12px;';
+        var label = document.createElement('div');
+        label.className = 'text-muted small mb-2';
+        label.textContent = strings.dialoglabel || 'Exam proctoring';
         overlayText = document.createElement('p');
         overlayText.id = 'examproctor-overlay-text';
         overlayText.setAttribute('aria-live', 'assertive');
-        overlayText.style.cssText = 'font-size:1.4rem;max-width:560px;margin-bottom:24px;';
+        overlayText.style.cssText = 'font-size:1.15rem;line-height:1.45;margin:0 0 20px;';
         overlayButton = document.createElement('button');
         overlayButton.type = 'button';
-        overlayButton.className = 'btn btn-primary btn-lg';
+        overlayButton.className = 'btn btn-primary';
         overlayButton.addEventListener('click', onOverlayButton);
         overlay.setAttribute('aria-describedby', overlayText.id);
-        overlay.appendChild(overlayText);
-        overlay.appendChild(overlayButton);
+        card.appendChild(label);
+        card.appendChild(overlayText);
+        card.appendChild(overlayButton);
+        overlay.appendChild(card);
         // Keep keyboard focus inside the dialog while it is shown.
         overlay.addEventListener('keydown', function(e) {
             if (e.key === 'Tab') {
@@ -357,7 +389,7 @@ define(['core/ajax', 'core_form/changechecker'], function(Ajax, ChangeChecker) {
     };
 
     /**
-     * The browser cannot or will not go fullscreen (policy, kiosk, frame, old device). Never lock the student out:
+     * The browser cannot or will not go fullscreen (policy, kiosk, frame, old device). Never lock the learner out:
      * continue without fullscreen, record it for the teacher, and do not ask again in this attempt.
      *
      * @param {String} reason
@@ -423,10 +455,13 @@ define(['core/ajax', 'core_form/changechecker'], function(Ajax, ChangeChecker) {
             refreshOverlay();
             return;
         }
+        // The browser's permission prompt takes focus: that is not the learner leaving the quiz.
+        api.suspendFocus(PROMPT_SUSPEND_MS);
         navigator.mediaDevices.getUserMedia({
             video: {width: {ideal: 640}, height: {ideal: 480}},
             audio: false
         }).then(function(mediaStream) {
+            api.suspendFocus(0);
             stream = mediaStream;
             video.srcObject = mediaStream;
             video.play();
@@ -451,6 +486,7 @@ define(['core/ajax', 'core_form/changechecker'], function(Ajax, ChangeChecker) {
             }, 3000);
             return mediaStream;
         }).catch(function(error) {
+            api.suspendFocus(0);
             cameraActive = false;
             blockers.camera = true;
             cameraFailed = true;
@@ -502,7 +538,8 @@ define(['core/ajax', 'core_form/changechecker'], function(Ajax, ChangeChecker) {
     /**
      * Shrink the frame to a 64x48 grayscale copy and compare it with the previous one.
      *
-     * @return {Object} {fresh, changed, noisy, mean, spread}: % of pixels moved / changed at all, brightness stats
+     * @return {Object} {fresh, changed, noisy, mean, spread, red, detail}: % of pixels moved / changed at all,
+     *     brightness stats, share of strongly red pixels (0-1) and mean neighbour difference (detail, 0-255)
      */
     var sampleFrame = function() {
         var now = Date.now();
@@ -517,10 +554,21 @@ define(['core/ajax', 'core_form/changechecker'], function(Ajax, ChangeChecker) {
         var n = SAMPLE_W * SAMPLE_H;
         var cur = new Float32Array(n);
         var sum = 0;
+        var reds = 0;
+        var detail = 0;
         var i;
         for (i = 0; i < n; i++) {
-            cur[i] = 0.299 * data[i * 4] + 0.587 * data[i * 4 + 1] + 0.114 * data[i * 4 + 2];
+            var r = data[i * 4];
+            var g = data[i * 4 + 1];
+            var b = data[i * 4 + 2];
+            cur[i] = 0.299 * r + 0.587 * g + 0.114 * b;
             sum += cur[i];
+            if (r > 40 && r > 1.6 * g && r > 1.6 * b) {
+                reds++;
+            }
+            if (i % SAMPLE_W) {
+                detail += Math.abs(cur[i] - cur[i - 1]);
+            }
         }
         var mean = sum / n;
         var sq = 0;
@@ -528,7 +576,8 @@ define(['core/ajax', 'core_form/changechecker'], function(Ajax, ChangeChecker) {
             cur[i] -= mean;
             sq += cur[i] * cur[i];
         }
-        var result = {fresh: false, changed: 0, noisy: 0, mean: mean, spread: Math.sqrt(sq / n)};
+        var result = {fresh: false, changed: 0, noisy: 0, mean: mean, spread: Math.sqrt(sq / n), red: reds / n,
+            detail: detail / ((SAMPLE_W - 1) * SAMPLE_H)};
         if (prevFrame && now - prevTime <= MAX_GAP_MS) {
             var changed = 0;
             var noisy = 0;
@@ -557,6 +606,9 @@ define(['core/ajax', 'core_form/changechecker'], function(Ajax, ChangeChecker) {
         var track = stream && stream.getVideoTracks()[0];
         if ((track && track.muted) || sample.mean < DARK_LEVEL || sample.spread < FLAT_LEVEL) {
             return {type: 'camera_covered', details: 'brightness ' + Math.round(sample.mean)};
+        }
+        if (sample.red >= GLOW_SHARE && sample.detail < GLOW_DETAIL) {
+            return {type: 'camera_covered', details: 'brightness ' + Math.round(sample.mean) + ', red glow (lens covered)'};
         }
         if (!videoTimeSince || video.currentTime !== lastVideoTime) {
             lastVideoTime = video.currentTime;
@@ -684,7 +736,9 @@ define(['core/ajax', 'core_form/changechecker'], function(Ajax, ChangeChecker) {
     var registerListeners = function() {
         document.addEventListener('visibilitychange', function() {
             if (document.hidden) {
-                if (!focusSuspended()) {
+                // Switching to another app often hides the tab a moment after the window lost focus: that is the
+                // same departure, already being recorded as a window switch, so it does not count a second time.
+                if (!focusSuspended() && !blurAt) {
                     hiddenAt = Date.now();
                     report('tab_hidden');
                 }
@@ -699,14 +753,25 @@ define(['core/ajax', 'core_form/changechecker'], function(Ajax, ChangeChecker) {
             window.setTimeout(function() {
                 if (!document.hidden && !document.hasFocus() && !focusSuspended() && !blurAt) {
                     blurAt = Date.now();
-                    report('window_blur');
+                    blurConfirmed = false;
+                    // Counted only if the learner stays away: a moment's switch (often the browser's own UI) is
+                    // flagged for review when they come back instead.
+                    window.clearTimeout(blurTimer);
+                    blurTimer = window.setTimeout(function() {
+                        if (blurAt && !document.hasFocus()) {
+                            blurConfirmed = true;
+                            sendEvent('window_blur', '');
+                        }
+                    }, BRIEF_MS);
                 }
             }, 300);
         });
         window.addEventListener('focus', function() {
             if (blurAt) {
-                sendEvent('window_returned', awayDetails(blurAt));
+                window.clearTimeout(blurTimer);
+                sendEvent(blurConfirmed ? 'window_returned' : 'window_brief', awayDetails(blurAt));
                 blurAt = 0;
+                blurConfirmed = false;
             }
         });
 
@@ -823,10 +888,10 @@ define(['core/ajax', 'core_form/changechecker'], function(Ajax, ChangeChecker) {
         /**
          * Ignore focus and fullscreen changes for a while (for example while a browser permission dialog is open).
          *
-         * @param {Number} ms 0 to stop ignoring
+         * @param {Number} ms 0 to stop ignoring, after a short tail while focus returns from the closing dialog
          */
         suspendFocus: function(ms) {
-            focusSuspendedUntil = ms ? Date.now() + ms : 0;
+            focusSuspendedUntil = Date.now() + (ms || RESUME_TAIL_MS);
         }
     };
 

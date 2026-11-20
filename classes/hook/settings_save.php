@@ -22,7 +22,7 @@ use core\attribute;
  * Lets other plugins save their proctoring settings when a quiz is saved.
  *
  * @package    quizaccess_examproctor
- * @copyright  2026 32Mins
+ * @copyright  2026 32Mins Digital
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 #[attribute\label('Save exam proctoring quiz settings')]

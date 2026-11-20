@@ -18,7 +18,7 @@
  * so it does not use exam time. The camera is released again straight away.
  *
  * @module     quizaccess_examproctor/devicecheck
- * @copyright  2026 32Mins
+ * @copyright  2026 32Mins Digital
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 define([], function() {

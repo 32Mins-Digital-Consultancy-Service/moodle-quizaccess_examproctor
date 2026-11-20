@@ -28,7 +28,7 @@ use quizaccess_examproctor\local\helper;
  * Records a proctoring event for the current user's in-progress attempt.
  *
  * @package    quizaccess_examproctor
- * @copyright  2026 32Mins
+ * @copyright  2026 32Mins Digital
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class log_event extends external_api {
@@ -48,6 +48,15 @@ class log_event extends external_api {
 
     /** The same violation type again within this many seconds is recorded as a repeat, not a new violation. */
     const REPEAT_SECONDS = 5;
+
+    /**
+     * Violation types that one action can raise together: leaving for another app loses the window focus and then
+     * hides the tab. Within REPEAT_SECONDS they count once.
+     */
+    const SAME_ACTION = [
+        'tab_hidden' => ['tab_hidden', 'window_blur'],
+        'window_blur' => ['tab_hidden', 'window_blur'],
+    ];
 
     /** Heartbeats closer together than this are ignored. */
     const HEARTBEAT_MIN_GAP = 20;
@@ -132,7 +141,7 @@ class log_event extends external_api {
             return $result;
         }
 
-        // Heartbeat: one row per attempt, updated in place, so a quiet student never looks silent.
+        // Heartbeat: one row per attempt, updated in place, so a quiet learner never looks silent.
         if ($type === 'heartbeat') {
             return self::heartbeat($attempt, $result);
         }
@@ -156,14 +165,16 @@ class log_event extends external_api {
 
         $isviolation = $def->violation ? 1 : 0;
         $details = $params['details'];
+        [$typesql, $typeparams] = $DB->get_in_or_equal(self::SAME_ACTION[$type] ?? [$type]);
         if (
             $isviolation && $DB->record_exists_select(
                 'quizaccess_examproctor_log',
-                'attemptid = ? AND eventtype = ? AND isviolation = 1 AND timecreated >= ?',
-                [$attempt->id, $type, time() - self::REPEAT_SECONDS]
+                'attemptid = ? AND eventtype ' . $typesql . ' AND isviolation = 1 AND timecreated >= ?',
+                array_merge([$attempt->id], $typeparams, [time() - self::REPEAT_SECONDS])
             )
         ) {
-            // The same problem reported again within seconds (two tabs, a retry): keep it, but count it once.
+            // The same problem reported again within seconds (two tabs, a retry, one action raising two events):
+            // keep it, but count it once.
             $isviolation = 0;
             $details = '(repeat) ' . $details;
         }

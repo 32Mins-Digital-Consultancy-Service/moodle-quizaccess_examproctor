@@ -22,7 +22,7 @@ use core\attribute;
  * Lets other plugins add lines to the consent notice shown before a proctored attempt.
  *
  * @package    quizaccess_examproctor
- * @copyright  2026 32Mins
+ * @copyright  2026 32Mins Digital
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 #[attribute\label('Add lines to the exam proctoring consent notice')]
