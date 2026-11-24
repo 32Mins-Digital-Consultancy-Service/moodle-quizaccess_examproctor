@@ -1,5 +1,9 @@
 # Changes
 
+## 1.3.5 (2026-11-23)
+
+- Marked stable (MATURITY_STABLE). No code change from 1.3.4.
+
 ## 1.3.4 (2026-11-20)
 
 - One action, one violation: leaving for another app loses the window focus and then hides the tab; within 5 seconds
